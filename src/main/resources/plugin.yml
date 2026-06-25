@@ -1,0 +1,8 @@
+name: Meetups
+version: '${version}'
+
+main: me.involuting.meetups.uhc
+api-version: '1.21'
+load: STARTUP
+
+authors: [ involuting ]
