@@ -44,6 +44,8 @@ public abstract class GracePeriodTask extends BukkitRunnable {
 
             cancel();
 
+
+
             gameService.startPlaying(game);
             return;
         }
