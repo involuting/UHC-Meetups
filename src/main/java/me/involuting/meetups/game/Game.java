@@ -6,6 +6,7 @@ import me.involuting.meetups.arena.Arena;
 import me.involuting.meetups.game.state.GameState;
 import me.involuting.meetups.player.MeetupPlayer;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -27,58 +28,89 @@ public class Game {
         this.arena = arena;
     }
 
+    public boolean addPlayer(MeetupPlayer player) {
 
-
-    public void addPlayer(MeetupPlayer player) {
-        if (player == null) return;
-
-        spectators.remove(player);
-        players.add(player);
-    }
-
-    public void removePlayer(MeetupPlayer player) {
-        if (player == null) return;
-
-        players.remove(player);
-    }
-
-    public boolean isPlayerAlive(MeetupPlayer player) {
-        return players.contains(player);
-    }
-
-
-
-    public void addSpectator(MeetupPlayer player) {
-        if (player == null) return;
-
-        players.remove(player);
-        spectators.add(player);
-    }
-
-    public void removeSpectator(MeetupPlayer player) {
-        if (player == null) return;
+        if (player == null) {
+            return false;
+        }
 
         spectators.remove(player);
+        return players.add(player);
     }
 
+    public boolean removePlayer(MeetupPlayer player) {
 
+        if (player == null) {
+            return false;
+        }
 
-    public boolean isPlaying() {
-        return gameState == GameState.PLAYING
-                || gameState == GameState.DEATHMATCH;
+        return players.remove(player);
     }
 
+    public boolean addSpectator(MeetupPlayer player) {
 
+        if (player == null) {
+            return false;
+        }
+
+        players.remove(player);
+        return spectators.add(player);
+    }
+
+    public boolean removeSpectator(MeetupPlayer player) {
+
+        if (player == null) {
+            return false;
+        }
+
+        return spectators.remove(player);
+    }
+
+    public boolean isPlayer(MeetupPlayer player) {
+        return player != null && players.contains(player);
+    }
+
+    public boolean isSpectator(MeetupPlayer player) {
+        return player != null && spectators.contains(player);
+    }
+
+    public MeetupPlayer getPlayer(UUID uniqueId) {
+
+        if (uniqueId == null) {
+            return null;
+        }
+
+        for (MeetupPlayer player : players) {
+            if (player.getPlayer() != null &&
+                    player.getPlayer().getUniqueId().equals(uniqueId)) {
+                return player;
+            }
+        }
+
+        for (MeetupPlayer spectator : spectators) {
+            if (spectator.getPlayer() != null &&
+                    spectator.getPlayer().getUniqueId().equals(uniqueId)) {
+                return spectator;
+            }
+        }
+
+        return null;
+    }
 
     public int getAlivePlayers() {
-        return players.size();
+        return (int) players.stream()
+                .filter(MeetupPlayer::isAlive)
+                .count();
     }
 
     public int getTotalPlayers() {
         return players.size() + spectators.size();
     }
 
-
+    public boolean isPlaying() {
+        return gameState == GameState.PLAYING
+                || gameState == GameState.DEATHMATCH;
+    }
 
     public void reset() {
         players.clear();
@@ -87,10 +119,11 @@ public class Game {
         gameState = GameState.WAITING;
     }
 
-    public MeetupPlayer getMeetupPlayer(UUID uniqueId) {
-        return players.stream()
-                .filter(p -> p.getPlayer().getUniqueId().equals(uniqueId))
-                .findFirst()
-                .orElse(null);
+    public Set<MeetupPlayer> getPlayers() {
+        return Collections.unmodifiableSet(players);
+    }
+
+    public Set<MeetupPlayer> getSpectators() {
+        return Collections.unmodifiableSet(spectators);
     }
 }

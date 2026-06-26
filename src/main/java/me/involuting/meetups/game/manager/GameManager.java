@@ -6,12 +6,12 @@ import me.involuting.meetups.game.Game;
 import me.involuting.meetups.game.state.GameState;
 import me.involuting.meetups.player.MeetupPlayer;
 
+import java.util.Optional;
+
 @Getter
 public class GameManager {
 
     private Game game;
-
-
 
     public Game create(Arena arena) {
 
@@ -37,8 +37,6 @@ public class GameManager {
         game = null;
     }
 
-
-
     public boolean hasGame() {
         return game != null;
     }
@@ -51,60 +49,66 @@ public class GameManager {
         return game != null && game.getGameState() == state;
     }
 
-
-    public Arena getArena() {
-        ensureGame();
-        return game.getArena();
-    }
-
     public Game getGame() {
         ensureGame();
         return game;
     }
 
-
+    public Arena getArena() {
+        return getGame().getArena();
+    }
 
     public void addPlayer(MeetupPlayer player) {
-        ensureGame();
-        if (player == null) return;
 
-        game.addPlayer(player);
+        ensureGame();
+
+        if (player == null) {
+            return;
+        }
+
+        game.addPlayer((player));
     }
 
     public void removePlayer(MeetupPlayer player) {
+
         ensureGame();
-        if (player == null) return;
+
+        if (player == null) {
+            return;
+        }
 
         game.removePlayer(player);
     }
 
     public void addSpectator(MeetupPlayer player) {
+
         ensureGame();
-        if (player == null) return;
+
+        if (player == null) {
+            return;
+        }
 
         game.addSpectator(player);
     }
 
     public void removeSpectator(MeetupPlayer player) {
+
         ensureGame();
-        if (player == null) return;
+
+        if (player == null) {
+            return;
+        }
 
         game.removeSpectator(player);
     }
 
-
-
     public int getAlivePlayers() {
-        ensureGame();
-        return game.getAlivePlayers();
+        return getGame().getAlivePlayers();
     }
 
     public int getPlayerCount() {
-        ensureGame();
-        return game.getPlayers().size();
+        return getGame().getPlayers().size();
     }
-
-
 
     private void ensureGame() {
         if (game == null) {

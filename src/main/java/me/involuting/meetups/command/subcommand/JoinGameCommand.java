@@ -1,14 +1,16 @@
 package me.involuting.meetups.command.subcommand;
 
 import lombok.RequiredArgsConstructor;
+import me.involuting.meetups.arena.Arena;
+import me.involuting.meetups.arena.ArenaManager;
 import me.involuting.meetups.game.service.GameService;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
 @RequiredArgsConstructor
 public class JoinGameCommand implements SubCommand {
 
     private final GameService gameService;
-
+    private final ArenaManager arenaManager;
 
     @Override
     public String getName() {
@@ -27,7 +29,14 @@ public class JoinGameCommand implements SubCommand {
 
     @Override
     public void execute(Player player, String[] args) {
-        gameService.join(player);
 
+        Arena arena = arenaManager.getCurrentArena();
+
+        if (arena == null) {
+            player.sendMessage("§cThere is no active arena.");
+            return;
+        }
+
+        gameService.join(player, arena);
     }
 }

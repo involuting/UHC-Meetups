@@ -1,85 +1,90 @@
 package me.involuting.meetups.border;
 
-import lombok.Getter;
 import me.involuting.meetups.game.Game;
 import org.bukkit.Location;
 import org.bukkit.WorldBorder;
 
-@Getter
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 public class BorderManager {
 
-    private final Game game;
-    private final WorldBorder border;
+    // cache per game to avoid repeated lookups
+    private final Map<UUID, WorldBorder> borders = new HashMap<>();
 
-    public BorderManager(Game game) {
-        this.game = game;
-        this.border = game.getArena().getWorld().getWorldBorder();
+    private WorldBorder border(Game game) {
+        return borders.computeIfAbsent(
+                game.getArena().getWorld().getUID(),
+                id -> game.getArena().getWorld().getWorldBorder()
+        );
     }
 
-
-
-    public void setup() {
+    public void setup(Game game) {
+        WorldBorder border = border(game);
 
         border.setCenter(game.getArena().getBorderCenter());
         border.setSize(game.getArena().getStartingBorderSize());
 
-        border.setWarningDistance(5);
-        border.setWarningTime(15);
+        border.setWarningDistance(game.getArena().getWarningDistance());
+        border.setWarningTime(game.getArena().getWarningTime());
 
-        border.setDamageAmount(1.0D);
-        border.setDamageBuffer(0.0D);
+        border.setDamageAmount(game.getArena().getDamageAmount());
+        border.setDamageBuffer(game.getArena().getDamageBuffer());
     }
 
-
-
-    public void shrink() {
-
-        border.setSize(
+    public void shrink(Game game) {
+        shrinkTo(game,
                 game.getArena().getEndingBorderSize(),
-                game.getArena().getBorderShrinkTime()
-        );
+                game.getArena().getBorderShrinkTime());
     }
 
-    public void shrink(double size, long seconds) {
-        border.setSize(size, seconds);
+    public void shrink(Game game, double size, long seconds) {
+        border(game).setSize(size, seconds);
     }
 
-    public void deathmatch() {
-
-        border.setSize(
+    public void deathmatch(Game game) {
+        shrinkTo(game,
                 game.getArena().getDeathmatchBorderSize(),
-                game.getArena().getDeathmatchShrinkTime()
-        );
+                game.getArena().getDeathmatchShrinkTime());
     }
 
-    public void shrinkTo(double size, int seconds) {
+    public void shrinkTo(Game game, double size, long seconds) {
+        WorldBorder border = border(game);
 
         border.setSize(size, seconds);
 
-        game.getPlayers().forEach(p ->
-                p.getPlayer().sendMessage("§cBorder shrinking to §e" + size)
-        );
+        game.getPlayers().forEach(player -> {
+            var p = player.getPlayer();
+            if (p != null) {
+                p.sendMessage("§cBorder shrinking to §e" + size);
+            }
+        });
+    }
+
+    public void setCenter(Game game, Location location) {
+        border(game).setCenter(location);
+    }
+
+    public Location getCenter(Game game) {
+        return border(game).getCenter();
+    }
+
+    public double getSize(Game game) {
+        return border(game).getSize();
+    }
+
+    public boolean isShrinking(Game game) {
+        return border(game).getSize() > game.getArena().getEndingBorderSize();
+    }
+
+    public void reset(Game game) {
+        setup(game);
+    }
+
+    public void clear(Game game) {
+        borders.remove(game.getArena().getWorld().getUID());
     }
 
 
-
-    public void setCenter(Location location) {
-        border.setCenter(location);
-    }
-
-    public Location getCenter() {
-        return border.getCenter();
-    }
-
-    public double getSize() {
-        return border.getSize();
-    }
-
-    public boolean isShrinking() {
-        return border.getSize() > game.getArena().getEndingBorderSize();
-    }
-
-    public void reset() {
-        setup();
-    }
 }

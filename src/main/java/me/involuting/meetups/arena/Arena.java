@@ -3,18 +3,19 @@ package me.involuting.meetups.arena;
 import lombok.Getter;
 import lombok.Setter;
 import me.involuting.meetups.arena.state.ArenaState;
+import me.involuting.meetups.player.MeetupPlayer;
 import org.bukkit.Location;
 import org.bukkit.World;
 
-import java.util.EnumSet;
+import java.util.*;
 
 @Getter
 @Setter
 public class Arena {
-
     private final String name;
     private World world;
 
+    private final Set<UUID> players = new HashSet<>();
     private  Location lobbySpawn;
     private Location spectatorSpawn;
 
@@ -84,6 +85,25 @@ public class Arena {
     }
 
     public boolean hasBorderCenter() {
-        return borderCenter != null;
+        return false;
     }
+
+
+    public boolean hasPlayer(UUID uniqueId) {
+        return players.contains(uniqueId);
+    }
+
+    public boolean isFull() {
+        return players.size() >= maxPlayers;
+    }
+
+    public void addPlayer(UUID uniqueId) {
+        players.add(uniqueId);
+    }
+
+    public void removePlayer(UUID uniqueId) {
+        players.remove(uniqueId);
+    }
+
+
 }

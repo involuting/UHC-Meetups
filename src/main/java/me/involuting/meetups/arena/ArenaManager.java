@@ -78,4 +78,9 @@ public class ArenaManager {
     public void save() {
         arenaStorage.save(new ArrayList<>(arenas.values()));
     }
+
+
+    public Arena getCurrentArena() {
+        return getFirstArena().orElse(null);
+    }
 }

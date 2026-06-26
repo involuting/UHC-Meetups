@@ -37,12 +37,19 @@ public final class Meetups extends JavaPlugin {
         registerCommands();
         registerListeners();
 
+        arenaStorage.load();
+
 
     }
 
     @Override
     public void onDisable() {
-        // Plugin shutdown logic
+
+        if (gameManager.hasGame()) {
+            gameService.endGame();
+        }
+
+        arenaManager.save();
     }
 
     private void registerManagers() {
@@ -54,9 +61,15 @@ public final class Meetups extends JavaPlugin {
         arenaStorage = new ArenaStorage(this);
         arenaManager = new ArenaManager(arenaStorage);
 
-        gameService = new GameService(this, gameManager, borderManager, scatterManager);
+        borderManager = new BorderManager();
 
-        arenaStorage.load();
+        gameService = new GameService(
+                this,
+                gameManager,
+                borderManager,
+                scatterManager,
+                playerManager
+        );
     }
 
     private void registerListeners(){
@@ -92,7 +105,7 @@ public final class Meetups extends JavaPlugin {
         meetupCommand.register(new ToggleCommand(arenaManager, this));
         meetupCommand.register(new ScenarioCommand(arenaManager, this));
         meetupCommand.register(new StartGameCommand(arenaManager, gameManager, gameService, arenaStorage));
-        meetupCommand.register(new JoinGameCommand(gameService));
+        meetupCommand.register(new JoinGameCommand(gameService, arenaManager));
 
         getCommand("meetups").setExecutor(meetupCommand);
     }

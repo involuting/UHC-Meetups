@@ -1,47 +1,69 @@
 package me.involuting.meetups.deathmatch;
 
-import lombok.RequiredArgsConstructor;
+import lombok.Getter;
 import me.involuting.meetups.Meetups;
 import me.involuting.meetups.game.Game;
 import me.involuting.meetups.game.service.GameService;
 import me.involuting.meetups.game.state.GameState;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Sound;
 import org.bukkit.scheduler.BukkitRunnable;
 
-@RequiredArgsConstructor
+@Getter
 public class DeathmatchTask extends BukkitRunnable {
 
     private final Meetups plugin;
     private final Game game;
     private final GameService gameService;
-    private final int countdown;
 
-    private int timeLeft;
+    private int seconds;
 
-    public void start() {
-        this.timeLeft = countdown;
-        runTaskTimer(plugin, 0L, 20L);
+    public DeathmatchTask(Meetups plugin, Game game, GameService gameService, int seconds) {
+        this.plugin = plugin;
+        this.game = game;
+        this.gameService = gameService;
+        this.seconds = seconds;
     }
 
     @Override
     public void run() {
 
-        if (timeLeft <= 0) {
-            startDeathmatch();
+        if (game.getGameState() != GameState.PLAYING) {
             cancel();
             return;
         }
 
-        if (timeLeft == countdown || timeLeft <= 10) {
-            Bukkit.broadcastMessage(ChatColor.RED +
-                    "Deathmatch starting in " + timeLeft + "s!");
+        if (seconds <= 0) {
+            cancel();
+            gameService.startDeathmatch();
+            return;
         }
 
-        timeLeft--;
+        if (seconds == 60
+                || seconds == 30
+                || seconds == 15
+                || seconds == 10
+                || seconds <= 5) {
+
+            Bukkit.broadcastMessage(ChatColor.RED +
+                    "Deathmatch starts in " +
+                    ChatColor.YELLOW + seconds +
+                    ChatColor.RED + " seconds!");
+
+            Bukkit.getOnlinePlayers().forEach(player ->
+                    player.playSound(
+                            player.getLocation(),
+                            Sound.BLOCK_NOTE_BLOCK_PLING,
+                            1F,
+                            1F
+                    ));
+        }
+
+        seconds--;
     }
 
-    private void startDeathmatch() {
-        gameService.startDeathmatch();
+    public void start() {
+        runTaskTimer(plugin, 20L, 20L);
     }
 }

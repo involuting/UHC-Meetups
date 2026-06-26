@@ -9,6 +9,7 @@ import me.involuting.meetups.player.MeetupPlayer;
 import me.involuting.meetups.player.PlayerManager;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -26,9 +27,10 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
 
-        MeetupPlayer meetupPlayer = playerManager.getOrCreate(event.getPlayer());
+        Player player = event.getPlayer();
+        MeetupPlayer meetupPlayer = playerManager.getOrCreate(player);
 
-        event.getPlayer().setGameMode(GameMode.ADVENTURE);
+        player.setGameMode(GameMode.ADVENTURE);
 
         if (!gameManager.hasGame()) {
             return;
@@ -40,10 +42,7 @@ public class PlayerListener implements Listener {
 
             case WAITING:
             case STARTING:
-                meetupPlayer.setAlive(true);
-                meetupPlayer.setSpectating(false);
-
-                game.addPlayer(meetupPlayer);
+                player.sendMessage("§eA game is waiting for players. Use §6/meetups join§e to participate.");
                 break;
 
             default:
@@ -52,12 +51,13 @@ public class PlayerListener implements Listener {
 
                 game.addSpectator(meetupPlayer);
 
-                event.getPlayer().setGameMode(GameMode.SPECTATOR);
+                player.setGameMode(GameMode.SPECTATOR);
 
                 if (game.getArena().getSpectatorSpawn() != null) {
-                    event.getPlayer().teleport(game.getArena().getSpectatorSpawn());
+                    player.teleport(game.getArena().getSpectatorSpawn());
                 }
 
+                player.sendMessage("§cA game is already in progress. You have joined as a spectator.");
                 break;
         }
     }
