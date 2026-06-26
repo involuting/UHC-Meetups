@@ -49,21 +49,6 @@ This plugin provides a complete backend system for running automated UHC Meetup 
 
 ---
 
-## 🧱 Project Structure
-me.involuting.meetups
-│
-├── arena → Arena creation & storage
-├── border → World border logic & tasks
-├── game → Core game engine & state handling
-├── player → Player & spectator management
-├── scatter → Player spawn distribution system
-├── listener → Event listeners
-├── service → Game orchestration services
-└── queue → Player queue system
-
-
----
-
 ## 🚀 Installation
 
 ### 1. Download Plugin
