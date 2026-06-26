@@ -58,6 +58,7 @@ public class PlayerListener implements Listener {
                 queueManager.giveLobbyItems(player);
                 break;
 
+
             default:
 
                 mp.setAlive(false);
@@ -72,6 +73,10 @@ public class PlayerListener implements Listener {
 
                 player.sendMessage("§cYou joined as a spectator.");
                 break;
+        }
+
+        if (gameManager.isRunning()){
+            player.getInventory().clear();
         }
     }
 

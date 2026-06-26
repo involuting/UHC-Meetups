@@ -29,7 +29,7 @@ public class ArenaStorage {
      * Loads arenas from disk.
      * Returns loaded arenas and optionally registers them in ArenaManager.
      */
-    public List<Arena> load() {
+    public void load() {
 
         setupFile();
 
@@ -39,7 +39,7 @@ public class ArenaStorage {
         ConfigurationSection root = config.getConfigurationSection("arenas");
 
         if (root == null) {
-            return arenas;
+            return;
         }
 
         for (String name : root.getKeys(false)) {
@@ -57,7 +57,6 @@ public class ArenaStorage {
             arenaManager.loadArenas(arenas);
         }
 
-        return arenas;
     }
 
     /**
