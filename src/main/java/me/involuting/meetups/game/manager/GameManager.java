@@ -11,10 +11,16 @@ public class GameManager {
 
     private Game game;
 
+
+
     public Game create(Arena arena) {
 
-        if (hasGame()) {
-            throw new IllegalStateException("A game is already active.");
+        if (game != null) {
+            throw new IllegalStateException("A game is already running.");
+        }
+
+        if (arena == null) {
+            throw new IllegalArgumentException("Arena cannot be null.");
         }
 
         game = new Game(arena);
@@ -25,11 +31,12 @@ public class GameManager {
 
     public void destroy() {
 
-        checkGame();
+        ensureGame();
 
         game.reset();
         game = null;
     }
+
 
 
     public boolean hasGame() {
@@ -37,50 +44,69 @@ public class GameManager {
     }
 
     public boolean isRunning() {
-        return hasGame() && game.isPlaying();
+        return game != null && game.isPlaying();
     }
 
     public boolean isState(GameState state) {
-        return hasGame() && game.getGameState() == state;
+        return game != null && game.getGameState() == state;
     }
 
+
     public Arena getArena() {
-        checkGame();
+        ensureGame();
         return game.getArena();
     }
 
-    public int getAlivePlayers() {
-        checkGame();
-        return game.getAlivePlayers();
+    public Game getGame() {
+        ensureGame();
+        return game;
     }
 
-    public int getPlayerCount() {
-        checkGame();
-        return game.getPlayers().size();
-    }
+
 
     public void addPlayer(MeetupPlayer player) {
-        checkGame();
+        ensureGame();
+        if (player == null) return;
+
         game.addPlayer(player);
     }
 
     public void removePlayer(MeetupPlayer player) {
-        checkGame();
+        ensureGame();
+        if (player == null) return;
+
         game.removePlayer(player);
     }
 
     public void addSpectator(MeetupPlayer player) {
-        checkGame();
+        ensureGame();
+        if (player == null) return;
+
         game.addSpectator(player);
     }
 
     public void removeSpectator(MeetupPlayer player) {
-        checkGame();
+        ensureGame();
+        if (player == null) return;
+
         game.removeSpectator(player);
     }
 
-    private void checkGame() {
 
+
+    public int getAlivePlayers() {
+        ensureGame();
+        return game.getAlivePlayers();
+    }
+
+    public int getPlayerCount() {
+        ensureGame();
+        return game.getPlayers().size();
+    }
+
+
+
+    private void ensureGame() {
         if (game == null) {
             throw new IllegalStateException("No active game.");
         }

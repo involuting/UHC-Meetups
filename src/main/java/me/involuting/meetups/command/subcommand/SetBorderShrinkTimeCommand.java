@@ -12,7 +12,6 @@ import java.util.Optional;
 public class SetBorderShrinkTimeCommand implements SubCommand {
 
     private final ArenaManager arenaManager;
-
     private final Meetups plugin;
 
     @Override
@@ -27,20 +26,22 @@ public class SetBorderShrinkTimeCommand implements SubCommand {
 
     @Override
     public String getUsage() {
-        return "/meetup setbordershrinktime (arena) (seconds)";
+        return "/meetup setbordershrinktime <arena> <seconds>";
     }
 
     @Override
     public void execute(Player player, String[] args) {
 
-        if (args.length != 3) {
+        if (args.length < 3) {
             player.sendMessage("§cUsage: " + getUsage());
             return;
         }
 
-        Optional<Arena> optional = arenaManager.getArena(args[1]);
+        String arenaName = args[1];
 
-        if (optional.isEmpty()) {
+        Optional<Arena> optionalArena = arenaManager.getArena(arenaName);
+
+        if (optionalArena.isEmpty()) {
             player.sendMessage("§cThat arena does not exist.");
             return;
         }
@@ -49,7 +50,7 @@ public class SetBorderShrinkTimeCommand implements SubCommand {
 
         try {
             seconds = Integer.parseInt(args[2]);
-        } catch (NumberFormatException exception) {
+        } catch (NumberFormatException e) {
             player.sendMessage("§cBorder shrink time must be a valid number.");
             return;
         }
@@ -59,15 +60,13 @@ public class SetBorderShrinkTimeCommand implements SubCommand {
             return;
         }
 
-        Arena arena = optional.get();
-
+        Arena arena = optionalArena.get();
         arena.setBorderShrinkTime(seconds);
 
-        plugin.getArenaStorage().save();
 
-
+        arenaManager.save();
 
         player.sendMessage("§aBorder shrink time for arena §e" + arena.getName()
-                + " §ahas been set to §e" + seconds + " §aseconds.");
+                + " §ahas been set to §e" + seconds + "§a seconds.");
     }
 }

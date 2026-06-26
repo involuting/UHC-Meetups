@@ -88,7 +88,7 @@ public class ScenarioCommand implements SubCommand {
                 return;
 
         }
-        plugin.getArenaStorage().save();
+        arenaManager.save();
 
     }
 }

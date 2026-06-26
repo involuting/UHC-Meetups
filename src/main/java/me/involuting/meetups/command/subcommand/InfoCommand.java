@@ -3,6 +3,7 @@ package me.involuting.meetups.command.subcommand;
 import lombok.RequiredArgsConstructor;
 import me.involuting.meetups.arena.Arena;
 import me.involuting.meetups.arena.ArenaManager;
+import me.involuting.meetups.arena.ArenaStorage;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
@@ -11,6 +12,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class InfoCommand implements SubCommand {
     private final ArenaManager arenaManager;
+    private final ArenaStorage arenaStorage;
 
     @Override
     public String getName() {

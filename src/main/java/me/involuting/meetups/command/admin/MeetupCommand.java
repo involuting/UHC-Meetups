@@ -1,6 +1,7 @@
 package me.involuting.meetups.command.admin;
 
 import lombok.RequiredArgsConstructor;
+import me.involuting.meetups.arena.ArenaStorage;
 import me.involuting.meetups.command.subcommand.SubCommand;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -13,6 +14,8 @@ import java.util.Map;
 
 @RequiredArgsConstructor
 public class MeetupCommand implements CommandExecutor {
+
+    private final ArenaStorage arenaStorage;
 
     private final Map<String, SubCommand> subCommands = new HashMap<>();
 

@@ -8,8 +8,10 @@ import me.involuting.meetups.player.MeetupPlayer;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
-@Getter @Setter
+@Getter
+@Setter
 public class Game {
 
     private final Arena arena;
@@ -21,47 +23,74 @@ public class Game {
 
     private int countdown;
 
-    private int alivePlayers;
-
     public Game(Arena arena) {
         this.arena = arena;
     }
 
-    public void addPlayer(MeetupPlayer player){
+
+
+    public void addPlayer(MeetupPlayer player) {
+        if (player == null) return;
+
+        spectators.remove(player);
         players.add(player);
-        alivePlayers++;
     }
 
-    public void removePlayer(MeetupPlayer player){
-        if (players.remove(player)){
-            alivePlayers--;
-        }
+    public void removePlayer(MeetupPlayer player) {
+        if (player == null) return;
+
+        players.remove(player);
     }
 
-    public void addSpectator(MeetupPlayer player){
+    public boolean isPlayerAlive(MeetupPlayer player) {
+        return players.contains(player);
+    }
+
+
+
+    public void addSpectator(MeetupPlayer player) {
+        if (player == null) return;
+
+        players.remove(player);
         spectators.add(player);
     }
+
+    public void removeSpectator(MeetupPlayer player) {
+        if (player == null) return;
+
+        spectators.remove(player);
+    }
+
+
 
     public boolean isPlaying() {
         return gameState == GameState.PLAYING
                 || gameState == GameState.DEATHMATCH;
     }
 
-    public void reset() {
-        players.clear();
-        spectators.clear();
-
-        alivePlayers = 0;
-        countdown = 0;
-        gameState = GameState.WAITING;
-    }
 
 
-    public void removeSpectator(MeetupPlayer player) {
-        spectators.remove(player);
+    public int getAlivePlayers() {
+        return players.size();
     }
 
     public int getTotalPlayers() {
         return players.size() + spectators.size();
+    }
+
+
+
+    public void reset() {
+        players.clear();
+        spectators.clear();
+        countdown = 0;
+        gameState = GameState.WAITING;
+    }
+
+    public MeetupPlayer getMeetupPlayer(UUID uniqueId) {
+        return players.stream()
+                .filter(p -> p.getPlayer().getUniqueId().equals(uniqueId))
+                .findFirst()
+                .orElse(null);
     }
 }

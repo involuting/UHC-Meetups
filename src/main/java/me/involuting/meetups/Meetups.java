@@ -20,6 +20,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 @Getter @Setter
 public final class Meetups extends JavaPlugin {
+
+
     private ScatterManager scatterManager;
     private PlayerManager playerManager;
     private GameManager gameManager;
@@ -45,29 +47,16 @@ public final class Meetups extends JavaPlugin {
 
     private void registerManagers() {
 
-
         playerManager = new PlayerManager();
         scatterManager = new ScatterManager();
-
-
         gameManager = new GameManager();
 
-
+        arenaStorage = new ArenaStorage(this);
         arenaManager = new ArenaManager(arenaStorage);
 
-        arenaStorage = new ArenaStorage(this, arenaManager);
-        arenaStorage.load();
-
-
-        if (gameManager.getGame() == null) {
-
-            borderManager = null;
-        } else {
-            borderManager = new BorderManager(gameManager.getGame());
-        }
-
-
         gameService = new GameService(this, gameManager, borderManager, scatterManager);
+
+        arenaStorage.load();
     }
 
     private void registerListeners(){
@@ -78,33 +67,34 @@ public final class Meetups extends JavaPlugin {
 
 
     private void registerCommands(){
-        MeetupCommand meetupCommand = new MeetupCommand();
+        MeetupCommand meetupCommand = new MeetupCommand(arenaStorage);
 
-        meetupCommand.register(new CreateCommand(this, arenaManager));
-        meetupCommand.register(new DeleteCommand(this, arenaManager));
-        meetupCommand.register(new ListCommand(arenaManager));
-        meetupCommand.register(new InfoCommand(arenaManager));
+        meetupCommand.register(new CreateCommand(this, arenaManager, arenaStorage));
+        meetupCommand.register(new DeleteCommand(this, arenaManager, arenaStorage));
+        meetupCommand.register(new ListCommand(arenaManager, arenaStorage));
+        meetupCommand.register(new InfoCommand(arenaManager, arenaStorage));
 
-        meetupCommand.register(new SetWorldCommand(arenaManager, this));
-        meetupCommand.register(new SetLobbyCommand(arenaManager, this));
-        meetupCommand.register(new SetSpectatorCommand(arenaManager, this));
-        meetupCommand.register(new SetBorderCenterCommand(arenaManager, this));
+        meetupCommand.register(new SetWorldCommand(arenaManager, this, arenaStorage));
+        meetupCommand.register(new SetLobbyCommand(arenaManager, this, arenaStorage));
+        meetupCommand.register(new SetSpectatorCommand(arenaManager, this, arenaStorage));
+        meetupCommand.register(new SetBorderCenterCommand(arenaManager, this, arenaStorage));
 
-        meetupCommand.register(new SetBorderCommand(arenaManager, this));
+        meetupCommand.register(new SetBorderCommand(arenaManager,  this, arenaStorage));
 
-        meetupCommand.register(new SetMinPlayersCommand(arenaManager, this));
-        meetupCommand.register(new SetMaxPlayersCommand(this, arenaManager));
+        meetupCommand.register(new SetMinPlayersCommand(arenaManager, this, arenaStorage));
+        meetupCommand.register(new SetMaxPlayersCommand(this, arenaManager, arenaStorage));
 
-        meetupCommand.register(new SetCountdownCommand(arenaManager, this));
-        meetupCommand.register(new SetGracePeriodCommand(arenaManager, this));
-        meetupCommand.register(new SetBorderDelayCommand(arenaManager, this));
+        meetupCommand.register(new SetCountdownCommand(arenaManager, this, arenaStorage));
+        meetupCommand.register(new SetGracePeriodCommand(arenaManager, this, arenaStorage));
+        meetupCommand.register(new SetBorderDelayCommand(arenaManager, this, arenaStorage));
         meetupCommand.register(new SetBorderShrinkTimeCommand(arenaManager, this));
 
         meetupCommand.register(new ToggleCommand(arenaManager, this));
         meetupCommand.register(new ScenarioCommand(arenaManager, this));
-        meetupCommand.register(new StartGameCommand(arenaManager, gameManager, gameService));
+        meetupCommand.register(new StartGameCommand(arenaManager, gameManager, gameService, arenaStorage));
+        meetupCommand.register(new JoinGameCommand(gameService));
 
-        getCommand("meetup").setExecutor(meetupCommand);
+        getCommand("meetups").setExecutor(meetupCommand);
     }
 
 

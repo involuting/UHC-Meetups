@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.involuting.meetups.Meetups;
 import me.involuting.meetups.arena.Arena;
 import me.involuting.meetups.arena.ArenaManager;
+import me.involuting.meetups.arena.ArenaStorage;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
@@ -13,6 +14,7 @@ public class DeleteCommand implements SubCommand{
 
     private final Meetups plugin;
     private final ArenaManager arenaManager;
+    private final ArenaStorage arenaStorage;
 
     @Override
     public String getName() {
@@ -45,6 +47,7 @@ public class DeleteCommand implements SubCommand{
         }
 
         arenaManager.unregister(String.valueOf(optional.get()));
+        arenaManager.save();
 
         player.sendMessage("§aSuccessfully deleted arena §e" + name + "§a.");
 

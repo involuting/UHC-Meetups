@@ -7,38 +7,43 @@ import org.bukkit.Material;
 import org.bukkit.World;
 
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
 
 public class ScatterManager {
 
     private static final int MAX_ATTEMPTS = 100;
+    private static final double MIN_DISTANCE_SQUARED = 16; // 4 blocks spacing
 
     private final Random random = new Random();
 
-    public void scatter(Game game){
-        Set<Location> useLocations = new HashSet<>();
+    public void scatter(Game game) {
 
-        for (MeetupPlayer player :  game.getPlayers()){
+        Set<Location> usedLocations = new HashSet<>();
+
+        for (MeetupPlayer player : game.getPlayers()) {
+
+            if (player == null || player.getPlayer() == null) continue;
+
             Location location = findSafeLocation(
                     game.getArena().getWorld(),
                     game.getArena().getBorderCenter(),
                     game.getArena().getStartingBorderSize(),
-                    useLocations
-                    );
+                    usedLocations
+            );
+
+            if (location == null) continue;
 
             player.getPlayer().teleport(location);
-
-            useLocations.add(location);
+            usedLocations.add(location);
         }
     }
 
-    public Location findSafeLocation(World world, Location center, double borderSize, Set<Location> usedLocations){
+    public Location findSafeLocation(World world, Location center, double borderSize, Set<Location> usedLocations) {
 
-        int radius = (int) (borderSize / 2) ;
+        int radius = (int) (borderSize / 2);
 
-        for (int attempt = 0; attempt < MAX_ATTEMPTS;  attempt++){
+        for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
 
             int x = center.getBlockX() + random.nextInt(radius * 2) - radius;
             int z = center.getBlockZ() + random.nextInt(radius * 2) - radius;
@@ -47,25 +52,37 @@ public class ScatterManager {
 
             Location location = new Location(world, x + 0.5, y + 1, z + 0.5);
 
-            if (isSafe(location)){
-                continue;
-            }
+            if (!isSafe(location)) continue;
 
-            if (usedLocations.stream().anyMatch(loc -> loc.distanceSquared(location) < 2500)){
-                continue;
-            }
+            if (isTooClose(location, usedLocations)) continue;
 
             return location;
         }
-        throw new IllegalStateException("Unable to find a safe scatter location.");
 
+        return null;
     }
 
     private boolean isSafe(Location location) {
 
-        Material ground = location.clone().subtract(0, 1, 0).getBlock().getType();
+        if (location == null) return false;
 
-        return ground != Material.LAVA
+        Material ground = location.clone()
+                .subtract(0, 1, 0)
+                .getBlock()
+                .getType();
+
+        return ground.isSolid()
+                && ground != Material.LAVA
                 && ground != Material.WATER;
+    }
+
+    private boolean isTooClose(Location location, Set<Location> used) {
+
+        for (Location loc : used) {
+            if (loc.distanceSquared(location) < MIN_DISTANCE_SQUARED) {
+                return true;
+            }
+        }
+        return false;
     }
 }

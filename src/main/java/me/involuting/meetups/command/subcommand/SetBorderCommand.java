@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import me.involuting.meetups.Meetups;
 import me.involuting.meetups.arena.Arena;
 import me.involuting.meetups.arena.ArenaManager;
+import me.involuting.meetups.arena.ArenaStorage;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
@@ -14,6 +15,7 @@ public class SetBorderCommand implements SubCommand {
 
     private final ArenaManager arenaManager;
     private final Meetups plugin;
+    private final ArenaStorage arenaStorage;
 
     @Override
     public String getName() {
@@ -79,7 +81,7 @@ public class SetBorderCommand implements SubCommand {
         arena.setEndingBorderSize(end);
         arena.setDeathmatchBorderSize(deathmatch);
 
-        plugin.getArenaStorage().save();
+        arenaManager.save();
 
 
 

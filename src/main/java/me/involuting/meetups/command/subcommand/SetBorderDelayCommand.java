@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.involuting.meetups.Meetups;
 import me.involuting.meetups.arena.Arena;
 import me.involuting.meetups.arena.ArenaManager;
+import me.involuting.meetups.arena.ArenaStorage;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
@@ -13,6 +14,7 @@ public class SetBorderDelayCommand implements SubCommand {
 
     private final ArenaManager arenaManager;
     private final Meetups plugin;
+    private final ArenaStorage arenaStorage;
 
     @Override
     public String getName() {
@@ -62,7 +64,7 @@ public class SetBorderDelayCommand implements SubCommand {
 
         arena.setBorderDelay(seconds);
 
-        plugin.getArenaStorage().save();
+        arenaManager.save();
 
         player.sendMessage("§aBorder delay for arena §e" + arena.getName()
                 + " §ahas been set to §e" + seconds + " §aseconds.");

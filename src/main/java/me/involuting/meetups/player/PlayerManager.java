@@ -14,12 +14,12 @@ public class PlayerManager {
         );
     }
 
-    public void remove(UUID player){
-        players.remove(player);
+    public void remove(UUID uuid){
+        players.remove(uuid);
     }
 
     public Optional<MeetupPlayer> get(Player player){
-        return get(player);
+        return get(player.getUniqueId());
     }
 
     public Optional<MeetupPlayer> get(UUID uuid){

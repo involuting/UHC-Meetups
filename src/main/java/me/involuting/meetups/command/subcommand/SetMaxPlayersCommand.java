@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.involuting.meetups.Meetups;
 import me.involuting.meetups.arena.Arena;
 import me.involuting.meetups.arena.ArenaManager;
+import me.involuting.meetups.arena.ArenaStorage;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
@@ -14,6 +15,7 @@ public class SetMaxPlayersCommand implements SubCommand {
     private final Meetups plugin;
 
     private final ArenaManager arenaManager;
+    private final ArenaStorage arenaStorage;
 
     @Override
     public String getName() {
@@ -67,7 +69,7 @@ public class SetMaxPlayersCommand implements SubCommand {
         }
 
         arena.setMaxPlayers(amount);
-        plugin.getArenaStorage().save();
+        arenaManager.save();
 
 
 

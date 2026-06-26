@@ -3,6 +3,7 @@ package me.involuting.meetups.command.subcommand;
 import lombok.RequiredArgsConstructor;
 import me.involuting.meetups.arena.Arena;
 import me.involuting.meetups.arena.ArenaManager;
+import me.involuting.meetups.arena.ArenaStorage;
 import me.involuting.meetups.game.manager.GameManager;
 import me.involuting.meetups.game.service.GameService;
 import org.bukkit.ChatColor;
@@ -14,6 +15,7 @@ public class StartGameCommand implements SubCommand {
     private final ArenaManager arenaManager;
     private final GameManager gameManager;
     private final GameService gameService;
+    private final ArenaStorage arenaStorage;
 
     @Override
     public String getName() {

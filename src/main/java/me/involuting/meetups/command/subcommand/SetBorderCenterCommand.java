@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.involuting.meetups.Meetups;
 import me.involuting.meetups.arena.Arena;
 import me.involuting.meetups.arena.ArenaManager;
+import me.involuting.meetups.arena.ArenaStorage;
 import org.bukkit.entity.Player;
 
 import java.util.Optional;
@@ -12,6 +13,7 @@ import java.util.Optional;
 public class SetBorderCenterCommand implements SubCommand{
     private final ArenaManager arenaManager;
     private final Meetups plugin;
+    private final ArenaStorage arenaStorage;
     @Override
     public String getName() {
         return "setbordercenter";
@@ -45,7 +47,7 @@ public class SetBorderCenterCommand implements SubCommand{
 
         arena.setBorderCenter(player.getLocation());
 
-        plugin.getArenaStorage().save();
+        arenaManager.save();
 
         player.sendMessage("§aBorder Center for Arena §e" + arena.getName() + " §ahas been updated.");
 
