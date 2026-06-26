@@ -5,7 +5,6 @@ import me.involuting.meetups.game.Game;
 import org.bukkit.Location;
 import org.bukkit.WorldBorder;
 
-
 @Getter
 public class BorderManager {
 
@@ -17,7 +16,10 @@ public class BorderManager {
         this.border = game.getArena().getWorld().getWorldBorder();
     }
 
+
+
     public void setup() {
+
         border.setCenter(game.getArena().getBorderCenter());
         border.setSize(game.getArena().getStartingBorderSize());
 
@@ -28,7 +30,10 @@ public class BorderManager {
         border.setDamageBuffer(0.0D);
     }
 
+
+
     public void shrink() {
+
         border.setSize(
                 game.getArena().getEndingBorderSize(),
                 game.getArena().getBorderShrinkTime()
@@ -40,15 +45,23 @@ public class BorderManager {
     }
 
     public void deathmatch() {
-        shrink(
+
+        border.setSize(
                 game.getArena().getDeathmatchBorderSize(),
                 game.getArena().getDeathmatchShrinkTime()
         );
     }
 
-    public void setSize(double size) {
-        border.setSize(size);
+    public void shrinkTo(double size, int seconds) {
+
+        border.setSize(size, seconds);
+
+        game.getPlayers().forEach(p ->
+                p.getPlayer().sendMessage("§cBorder shrinking to §e" + size)
+        );
     }
+
+
 
     public void setCenter(Location location) {
         border.setCenter(location);

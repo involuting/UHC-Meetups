@@ -11,77 +11,50 @@ public class GameManager {
 
     private Game game;
 
-    public Game create(Arena arena){
-        if (game != null){
-            throw new IllegalStateException("A game is already active");
+    public Game create(Arena arena) {
+
+        if (hasGame()) {
+            throw new IllegalStateException("A game is already active.");
         }
-        this.game = new Game(arena);
+
+        game = new Game(arena);
+        game.setGameState(GameState.WAITING);
 
         return game;
     }
 
-
-    public void start(){
-        checkGame();
-
-        if (game.getGameState() != GameState.STARTING) {
-            throw new IllegalStateException("Game is not ready to start.");
-        }
-
-        game.setGameState(GameState.PLAYING);
-    }
-
-
-
-    public void stop(){
-        checkGame();
-
-        game.setGameState(GameState.ENDING);
-    }
-
-    private void checkGame() {
-        if (game == null){
-            throw new IllegalStateException("No active games");
-        }
-    }
-
-
     public void destroy() {
+
         checkGame();
 
         game.reset();
-        this.game = null;
+        game = null;
     }
 
-    public boolean hasGame(){
-        return  game != null;
+
+    public boolean hasGame() {
+        return game != null;
     }
 
-    public boolean isRunning(){
+    public boolean isRunning() {
         return hasGame() && game.isPlaying();
     }
 
-    public boolean isState(GameState state){
+    public boolean isState(GameState state) {
         return hasGame() && game.getGameState() == state;
     }
 
-    public void setState(GameState state){
-        checkGame();
-
-        game.setGameState(state);
-    }
-
-    public Arena getArena(){
+    public Arena getArena() {
         checkGame();
         return game.getArena();
     }
 
-    public int getAlivePlayers(){
+    public int getAlivePlayers() {
         checkGame();
         return game.getAlivePlayers();
     }
 
-    public int getPlayerCount(){
+    public int getPlayerCount() {
         checkGame();
         return game.getPlayers().size();
     }
@@ -101,8 +74,15 @@ public class GameManager {
         game.addSpectator(player);
     }
 
+    public void removeSpectator(MeetupPlayer player) {
+        checkGame();
+        game.removeSpectator(player);
+    }
 
+    private void checkGame() {
 
-
-
+        if (game == null) {
+            throw new IllegalStateException("No active game.");
+        }
+    }
 }

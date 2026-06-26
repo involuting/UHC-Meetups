@@ -9,7 +9,7 @@ import org.bukkit.Sound;
 import org.bukkit.scheduler.BukkitRunnable;
 
 @Getter
-public class GameCountdown extends BukkitRunnable {
+public abstract class GameCountdown extends BukkitRunnable {
 
     private final Meetups plugin;
     private final Game game;
@@ -61,4 +61,6 @@ public class GameCountdown extends BukkitRunnable {
 
         runTaskTimer(plugin, 20L, 20L);
     }
+
+    public abstract void onFinish();
 }

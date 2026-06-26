@@ -11,7 +11,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.Iterator;
 
 @RequiredArgsConstructor
-public class ScatterTask extends BukkitRunnable {
+public abstract class ScatterTask extends BukkitRunnable {
 
     private final Meetups plugin;
 
@@ -42,4 +42,6 @@ public class ScatterTask extends BukkitRunnable {
         scatterManager.scatter(game);
 
     }
+
+    public abstract void onFinish();
 }

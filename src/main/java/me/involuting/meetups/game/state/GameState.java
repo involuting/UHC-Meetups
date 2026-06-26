@@ -6,5 +6,5 @@ public enum GameState {
     SCATTERING,
     PLAYING,
     DEATHMATCH,
-    ENDING
+    GRACE_PERIOD, ENDING
 }

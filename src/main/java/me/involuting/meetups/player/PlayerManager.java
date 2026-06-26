@@ -2,7 +2,6 @@ package me.involuting.meetups.player;
 
 import org.bukkit.entity.Player;
 
-import javax.swing.text.html.Option;
 import java.util.*;
 
 public class PlayerManager {
@@ -15,8 +14,8 @@ public class PlayerManager {
         );
     }
 
-    public void remove(Player player){
-        players.remove(player.getUniqueId());
+    public void remove(UUID player){
+        players.remove(player);
     }
 
     public Optional<MeetupPlayer> get(Player player){

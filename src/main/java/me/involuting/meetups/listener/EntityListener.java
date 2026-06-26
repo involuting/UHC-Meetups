@@ -1,7 +1,6 @@
 package me.involuting.meetups.listener;
 
 import lombok.RequiredArgsConstructor;
-import me.involuting.meetups.Meetups;
 import me.involuting.meetups.game.Game;
 import me.involuting.meetups.game.manager.GameManager;
 import me.involuting.meetups.game.state.GameState;
@@ -16,75 +15,69 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 @RequiredArgsConstructor
 public class EntityListener implements Listener {
 
-    private final Meetups plugin;
-
     private final GameManager gameManager;
     private final PlayerManager playerManager;
 
     @EventHandler
-    public void onDamage(EntityDamageEvent event){
+    public void onDamage(EntityDamageEvent event) {
 
-        if (!(event.getEntity() instanceof Player)){
+        if (!(event.getEntity() instanceof Player)) {
             return;
         }
 
-        if (!gameManager.hasGame()){
+        if (!gameManager.hasGame()) {
             return;
         }
 
         Game game = gameManager.getGame();
 
         if (game.getGameState() != GameState.PLAYING
-        && game.getGameState() != GameState.DEATHMATCH){
+                && game.getGameState() != GameState.DEATHMATCH) {
             event.setCancelled(true);
         }
     }
 
     @EventHandler
-    public void onDamageByEntity(EntityDamageByEntityEvent event){
+    public void onDamageByEntity(EntityDamageByEntityEvent event) {
 
-        if (!(event.getEntity() instanceof  Player victim)){
+        if (!(event.getEntity() instanceof Player victim)) {
             return;
         }
 
-        if (!(event.getEntity() instanceof  Player attacker)){
+        if (!(event.getDamager() instanceof Player attacker)) {
             return;
         }
 
-        if (!gameManager.isRunning()){
+        if (!gameManager.hasGame()) {
             event.setCancelled(true);
             return;
         }
 
-        playerManager.get(victim).ifPresent(meetupPlayer -> {
-            meetupPlayer.setLastAttacker(attacker);
-        });
-
-
-
-
-    }
-
-    @EventHandler
-    public void onFoodLevelChange(FoodLevelChangeEvent event){
-
-        if (!(event.getEntity() instanceof Player)){
+        if (gameManager.isState(GameState.GRACE_PERIOD)) {
+            event.setCancelled(true);
             return;
         }
 
-        if (!gameManager.hasGame()){
+        playerManager.get(victim).ifPresent(player ->
+                player.setLastAttacker(attacker));
+    }
+
+    @EventHandler
+    public void onFoodLevelChange(FoodLevelChangeEvent event) {
+
+        if (!(event.getEntity() instanceof Player)) {
+            return;
+        }
+
+        if (!gameManager.hasGame()) {
             return;
         }
 
         Game game = gameManager.getGame();
 
-        if (game.getGameState() != GameState.PLAYING && game.getGameState() != GameState.DEATHMATCH){
+        if (game.getGameState() != GameState.PLAYING
+                && game.getGameState() != GameState.DEATHMATCH) {
             event.setCancelled(true);
         }
     }
-
-
-
-
-
 }

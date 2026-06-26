@@ -10,6 +10,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
 
 @RequiredArgsConstructor
 public class ArenaStorage {
@@ -20,16 +21,18 @@ public class ArenaStorage {
     private File file;
     private YamlConfiguration config;
 
-    public void load(){
+    public void load() {
 
-        file =  new File(plugin.getDataFolder(), "arenas.yml");
+        file = new File(plugin.getDataFolder(), "arenas.yml");
 
-        if (!file.exists()){
+        if (!file.exists()) {
+            plugin.getDataFolder().mkdirs();
+
             try {
-                plugin.getDataFolder().mkdirs();
                 file.createNewFile();
-            } catch (IOException e) {
-                e.printStackTrace();
+            } catch (IOException exception) {
+                plugin.getLogger().log(Level.SEVERE, "Failed to create arenas.yml.", exception);
+                return;
             }
         }
 
@@ -37,62 +40,80 @@ public class ArenaStorage {
 
         arenaManager.getArenas().clear();
 
-        ConfigurationSection section = config.getConfigurationSection("arenas");
+        ConfigurationSection arenasSection = config.getConfigurationSection("arenas");
 
-        if (section == null){
+        if (arenasSection == null) {
             return;
         }
 
-        for (String name : section.getKeys(false)){
+        for (String name : arenasSection.getKeys(false)) {
 
-            ConfigurationSection arenaSection = section.getConfigurationSection(name);
+            ConfigurationSection section = arenasSection.getConfigurationSection(name);
 
-            if (arenaSection == null){
+            if (section == null) {
                 continue;
-
             }
 
-            World world = Bukkit.getWorld(arenaSection.getString("world"));
+            String worldName = section.getString("world");
 
-            if (world == null){
+            if (worldName == null) {
+                plugin.getLogger().warning("Arena '" + name + "' has no world configured.");
+                continue;
+            }
+
+            World world = Bukkit.getWorld(worldName);
+
+            if (world == null) {
+                plugin.getLogger().warning("Arena '" + name + "' could not be loaded because world '" + worldName + "' is not loaded.");
                 continue;
             }
 
             Arena arena = new Arena(name);
 
             arena.setWorld(world);
-            arena.setLobbySpawn(readLocation(world, arenaSection, "lobby"));
-            arena.setSpectatorSpawn(readLocation(world, arenaSection, "spectator"));
-            arena.setBorderCenter(readLocation(world, arenaSection, "border-center"));
-            arena.setStartingBorderSize(arenaSection.getDouble("border.start"));
-            arena.setEndingBorderSize(arenaSection.getDouble("border.end"));
-            arena.setDeathmatchBorderSize(arenaSection.getDouble("border.deathmatch"));
 
-            arena.setMinPlayers(arenaSection.getInt("players.min"));
-            arena.setMaxPlayers(arenaSection.getInt("players.max"));
+            arena.setLobbySpawn(readLocation(world, section, "lobby"));
+            arena.setSpectatorSpawn(readLocation(world, section, "spectator"));
+            arena.setBorderCenter(readLocation(world, section, "border-center"));
 
-            arena.setCountdown(arenaSection.getInt("countdown"));
-            arena.setGracePeriod(arenaSection.getInt("grace-period"));
-            arena.setBorderDelay(arenaSection.getInt("border-delay"));
-            arena.setBorderShrinkTime(arenaSection.getInt("border-shrink-time"));
+            arena.setStartingBorderSize(section.getDouble("border.start", 1000));
+            arena.setEndingBorderSize(section.getDouble("border.end", 50));
+            arena.setDeathmatchBorderSize(section.getDouble("border.deathmatch", 25));
 
-            arena.setAllowNether(arenaSection.getBoolean("allow-nether"));
-            arena.setAllowEnd(arenaSection.getBoolean("allow-end"));
-            arena.setAllowSpectators(arenaSection.getBoolean("allow-spectators"));
+            arena.setMinPlayers(section.getInt("players.min", 2));
+            arena.setMaxPlayers(section.getInt("players.max", 100));
 
-            arena.setCutClean(arenaSection.getBoolean("scenarios.cut-clean"));
-            arena.setGoldenHeads(arenaSection.getBoolean("scenarios.golden-heads"));
-            arena.setNaturalRegeneration(arenaSection.getBoolean("scenarios.natural-regeneration"));
-            arena.setDeathmatchEnabled(arenaSection.getBoolean("scenarios.deathmatch"));
+            arena.setCountdown(section.getInt("countdown", 60));
+            arena.setGracePeriod(section.getInt("grace-period", 300));
+            arena.setBorderDelay(section.getInt("border-delay", 600));
+            arena.setBorderShrinkTime(section.getInt("border-shrink-time", 900));
+
+            arena.setAllowNether(section.getBoolean("allow-nether", false));
+            arena.setAllowEnd(section.getBoolean("allow-end", false));
+            arena.setAllowSpectators(section.getBoolean("allow-spectators", true));
+
+            arena.setCutClean(section.getBoolean("scenarios.cut-clean", false));
+            arena.setGoldenHeads(section.getBoolean("scenarios.golden-heads", false));
+            arena.setNaturalRegeneration(section.getBoolean("scenarios.natural-regeneration", false));
+            arena.setDeathmatchEnabled(section.getBoolean("scenarios.deathmatch", true));
+
             arenaManager.register(arena);
         }
     }
 
     public void save() {
 
+        if (config == null || file == null) {
+            return;
+        }
+
         config.set("arenas", null);
 
         for (Arena arena : arenaManager.getArenas()) {
+
+            if (arena.getWorld() == null) {
+                continue;
+            }
 
             String path = "arenas." + arena.getName();
 
@@ -127,7 +148,7 @@ public class ArenaStorage {
         try {
             config.save(file);
         } catch (IOException exception) {
-            exception.printStackTrace();
+            plugin.getLogger().log(Level.SEVERE, "Failed to save arenas.yml.", exception);
         }
     }
 
@@ -140,6 +161,7 @@ public class ArenaStorage {
         config.set(path + ".x", location.getX());
         config.set(path + ".y", location.getY());
         config.set(path + ".z", location.getZ());
+
         config.set(path + ".yaw", location.getYaw());
         config.set(path + ".pitch", location.getPitch());
     }
@@ -160,4 +182,3 @@ public class ArenaStorage {
         );
     }
 }
-

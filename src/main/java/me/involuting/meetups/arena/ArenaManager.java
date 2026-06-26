@@ -9,12 +9,20 @@ public class ArenaManager {
 
     private final Map<String, Arena> arenas = new HashMap<>();
 
+    private final ArenaStorage arenaStorage;
+
+    public ArenaManager(ArenaStorage arenaStorage) {
+        this.arenaStorage = arenaStorage;
+    }
+
     public void register(Arena arena){
         arenas.put(arena.getName().toLowerCase(), arena);
+        arenaStorage.save();
     }
 
     public void unregister(String name){
         arenas.remove(name.toLowerCase());
+        arenaStorage.save();
     }
 
     public Optional<Arena> getArena(String name){

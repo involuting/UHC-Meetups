@@ -6,3 +6,6 @@ api-version: '1.21'
 load: STARTUP
 
 authors: [ involuting ]
+
+commands:
+  meetups:

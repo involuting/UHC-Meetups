@@ -9,7 +9,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 @RequiredArgsConstructor
-public class BorderTask extends BukkitRunnable {
+public abstract class BorderTask extends BukkitRunnable {
     private final Meetups plugin;
     private final Game game;
     private final BorderManager borderManager;
@@ -43,4 +43,6 @@ public class BorderTask extends BukkitRunnable {
         seconds--;
 
     }
+
+    public abstract void onFinish();
 }

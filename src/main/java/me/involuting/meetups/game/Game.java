@@ -42,20 +42,26 @@ public class Game {
         spectators.add(player);
     }
 
-    public boolean isPlaying(){
-        return gameState == GameState.PLAYING | gameState == GameState.DEATHMATCH;
+    public boolean isPlaying() {
+        return gameState == GameState.PLAYING
+                || gameState == GameState.DEATHMATCH;
     }
 
-    public void reset(){
+    public void reset() {
+        players.clear();
+        spectators.clear();
 
-
-        getPlayers().clear();
-        getSpectators().clear();
-
-        setAlivePlayers(0);
-        setCountdown(0);
-        setGameState(GameState.WAITING);
+        alivePlayers = 0;
+        countdown = 0;
+        gameState = GameState.WAITING;
     }
 
 
+    public void removeSpectator(MeetupPlayer player) {
+        spectators.remove(player);
+    }
+
+    public int getTotalPlayers() {
+        return players.size() + spectators.size();
+    }
 }

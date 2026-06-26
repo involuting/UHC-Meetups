@@ -20,12 +20,12 @@ public class CreateCommand implements SubCommand{
 
     @Override
     public String getPermission() {
-        return "";
+        return "op";
     }
 
     @Override
     public String getUsage() {
-        return "";
+        return "/meetup create (name)";
     }
 
     public void execute(Player player, String[] args){
@@ -49,6 +49,8 @@ public class CreateCommand implements SubCommand{
 
         arenaManager.register(arena);
 
-        player.sendMessage("&cCreated Arena &e(" + name + " )");
+
+
+        player.sendMessage("&aCreated arena &e" + name + "&a.");
     }
 }
