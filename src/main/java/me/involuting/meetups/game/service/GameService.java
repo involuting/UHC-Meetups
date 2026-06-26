@@ -12,12 +12,17 @@ import me.involuting.meetups.game.state.GameState;
 import me.involuting.meetups.grace.GracePeriodTask;
 import me.involuting.meetups.player.MeetupPlayer;
 import me.involuting.meetups.player.PlayerManager;
+import me.involuting.meetups.queue.QueueManager;
 import me.involuting.meetups.scatter.ScatterManager;
 import me.involuting.meetups.scatter.task.ScatterTask;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 
 import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
+import java.util.UUID;
+
 
 @RequiredArgsConstructor
 public class GameService {
@@ -27,27 +32,37 @@ public class GameService {
     private final BorderManager borderManager;
     private final ScatterManager scatterManager;
     private final PlayerManager playerManager;
+    private QueueManager queueManager;
 
     private GameCountdown countdown;
     private ScatterTask scatterTask;
     private BorderTask borderTask;
     private GracePeriodTask gracePeriodTask;
 
+    private boolean starting = false;
 
+    // =========================
+    // START FROM QUEUE
+    // =========================
+    public void startFromQueue(Arena arena, Set<UUID> queuedPlayers) {
 
-    public void start(Arena arena) {
-
-        if (gameManager.hasGame()) {
-            throw new IllegalStateException("Game already running.");
+        if (gameManager.hasGame() || starting) {
+            throw new IllegalStateException("Game already running or starting.");
         }
 
-        if (arena.getPlayers().size() < arena.getMinPlayers()) {
+        if (arena == null) {
+            throw new IllegalStateException("Arena cannot be null.");
+        }
+
+        if (queuedPlayers.size() < arena.getMinPlayers()) {
             throw new IllegalStateException("Not enough players.");
         }
 
+        starting = true;
+
         Game game = gameManager.create(arena);
 
-        for (var uuid : new HashSet<>(arena.getPlayers())) {
+        for (UUID uuid : new HashSet<>(queuedPlayers)) {
 
             Player player = Bukkit.getPlayer(uuid);
             if (player == null || !player.isOnline()) continue;
@@ -59,49 +74,55 @@ public class GameService {
             game.addPlayer(mp);
         }
 
-        arena.getPlayers().clear();
+        queuedPlayers.clear();
 
         startCountdown(game);
     }
 
-
-
+    // =========================
+    // COUNTDOWN
+    // =========================
     private void startCountdown(Game game) {
 
         game.setGameState(GameState.STARTING);
 
-        countdown = new GameCountdown(plugin, game, plugin.getScatterManager(), game.getArena().getCountdown()) {
+        countdown = new GameCountdown(
+                plugin,
+                game,
+                scatterManager,
+                game.getArena().getCountdown()
+        ) {
             @Override
             public void onFinish() {
-                scatterPlayers();
+                scatterPlayers(game);
             }
         };
 
         countdown.start();
     }
 
+    // =========================
+    // SCATTER
+    // =========================
+    public void scatterPlayers(Game game) {
 
-
-    public void scatterPlayers() {
-
-        Game game = safeGame();
         game.setGameState(GameState.SCATTERING);
 
         scatterTask = new ScatterTask(plugin, game, scatterManager) {
             @Override
             public void onFinish() {
-                startGracePeriod();
+                startGracePeriod(game);
             }
         };
 
         scatterTask.start();
     }
 
+    // =========================
+    // GRACE PERIOD
+    // =========================
+    public void startGracePeriod(Game game) {
 
-
-    public void startGracePeriod() {
-
-        Game game = safeGame();
         game.setGameState(GameState.GRACE_PERIOD);
 
         Bukkit.broadcastMessage(ChatColor.GREEN + "Grace period has started.");
@@ -109,18 +130,18 @@ public class GameService {
         gracePeriodTask = new GracePeriodTask(plugin, game, this, game.getArena().getGracePeriod()) {
             @Override
             public void onFinish() {
-                startPlaying();
+                startPlaying(game);
             }
         };
 
         gracePeriodTask.start();
     }
 
+    // =========================
+    // PLAYING
+    // =========================
+    public void startPlaying(Game game) {
 
-
-    public void startPlaying() {
-
-        Game game = safeGame();
         game.setGameState(GameState.PLAYING);
 
         Bukkit.broadcastMessage(ChatColor.GREEN + "The game has started!");
@@ -128,8 +149,9 @@ public class GameService {
         startBorder(game);
     }
 
-
-
+    // =========================
+    // BORDER
+    // =========================
     private void startBorder(Game game) {
 
         borderManager.setup(game);
@@ -137,18 +159,18 @@ public class GameService {
         borderTask = new BorderTask(plugin, game, borderManager) {
             @Override
             public void onFinish() {
-                startDeathmatch();
+                startDeathmatch(game);
             }
         };
 
         borderTask.start(game.getArena().getBorderDelay());
     }
 
+    // =========================
+    // DEATHMATCH
+    // =========================
+    public void startDeathmatch(Game game) {
 
-
-    public void startDeathmatch() {
-
-        Game game = safeGame();
         game.setGameState(GameState.DEATHMATCH);
 
         Bukkit.broadcastMessage(ChatColor.RED + "Deathmatch has begun!");
@@ -168,6 +190,7 @@ public class GameService {
                 player.setGameMode(GameMode.SURVIVAL);
             } else {
                 player.setGameMode(GameMode.SPECTATOR);
+
                 if (spectatorSpawn != null) {
                     player.teleport(spectatorSpawn);
                 }
@@ -177,11 +200,14 @@ public class GameService {
         borderManager.shrinkTo(game, arena.getDeathmatchBorderSize(), 10);
     }
 
-
-
+    // =========================
+    // ELIMINATION
+    // =========================
     public void eliminate(MeetupPlayer player) {
 
         Game game = safeGame();
+
+        if (!player.isAlive()) return; // prevents double elimination
 
         player.addDeath();
         player.setAlive(false);
@@ -193,6 +219,9 @@ public class GameService {
         checkWinner(game);
     }
 
+    // =========================
+    // WIN CHECK
+    // =========================
     private void checkWinner(Game game) {
 
         long alive = game.getPlayers().stream()
@@ -206,7 +235,7 @@ public class GameService {
                 .findFirst()
                 .orElse(null);
 
-        if (winner != null) {
+        if (winner != null && winner.getPlayer() != null) {
             Bukkit.broadcastMessage(ChatColor.GOLD +
                     winner.getPlayer().getName() +
                     " has won the game!");
@@ -218,11 +247,13 @@ public class GameService {
         resetBorder();
     }
 
-
-
+    // =========================
+    // END GAME
+    // =========================
     public void endGame() {
 
         Game game = safeGame();
+
         game.setGameState(GameState.ENDING);
 
         stopTasks();
@@ -231,8 +262,13 @@ public class GameService {
         game.getSpectators().forEach(this::resetPlayer);
 
         gameManager.destroy();
+
+        starting = false;
     }
 
+    // =========================
+    // RESET PLAYER
+    // =========================
     private void resetPlayer(MeetupPlayer mp) {
 
         Player player = mp.getPlayer();
@@ -259,8 +295,9 @@ public class GameService {
                 .forEach(e -> player.removePotionEffect(e.getType()));
     }
 
-
-
+    // =========================
+    // STOP TASKS
+    // =========================
     private void stopTasks() {
 
         if (countdown != null) countdown.cancel();
@@ -274,51 +311,33 @@ public class GameService {
         gracePeriodTask = null;
     }
 
-
-
+    // =========================
+    // SAFE GAME
+    // =========================
     private Game safeGame() {
+
         if (!gameManager.hasGame()) {
             throw new IllegalStateException("No active game.");
         }
+
         return gameManager.getGame();
     }
 
-
-
-    public void join(Player player, Arena arena) {
-
-        if (arena == null) {
-            player.sendMessage("§cNo arena is available.");
-            return;
-        }
-
-        if (arena.hasPlayer(player.getUniqueId())) {
-            player.sendMessage("§cYou are already in this arena.");
-            return;
-        }
-
-        if (arena.isFull()) {
-            player.sendMessage("§cThis arena is full.");
-            return;
-        }
-
-        arena.addPlayer(player.getUniqueId());
-
-        Bukkit.broadcastMessage(
-                "§a" + player.getName() +
-                        " §7joined the game §8(" +
-                        arena.getPlayers().size() + "/" +
-                        arena.getMaxPlayers() + ")"
-        );
-    }
-
+    // =========================
+    // BORDER RESET
+    // =========================
     public void resetBorder() {
+
         WorldBorder border = gameManager.getGame().getArena().getWorld().getWorldBorder();
 
-        border.setSize(6000); //
+        border.setSize(6000);
         border.setCenter(gameManager.getGame().getArena().getBorderCenter());
         border.setWarningDistance(0);
         border.setDamageAmount(0);
         border.setDamageBuffer(0);
+    }
+
+    public void setQueueManager(QueueManager queueManager) {
+        this.queueManager = queueManager;
     }
 }

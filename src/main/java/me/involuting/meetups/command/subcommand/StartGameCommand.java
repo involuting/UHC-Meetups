@@ -52,7 +52,7 @@ public class StartGameCommand implements SubCommand {
             return;
         }
 
-        gameService.start(arena);
+
 
         player.sendMessage(ChatColor.GREEN + "Starting game in arena "
                 + ChatColor.YELLOW + arena.getName()

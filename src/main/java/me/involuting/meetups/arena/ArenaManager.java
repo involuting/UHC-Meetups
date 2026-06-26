@@ -83,4 +83,14 @@ public class ArenaManager {
     public Arena getCurrentArena() {
         return getFirstArena().orElse(null);
     }
+
+    public Arena getAvailableArena() {
+
+        return arenas.values().stream()
+                .filter(Objects::nonNull)
+                .filter(Arena::isEnabled)
+                .filter(a -> !a.isInUse())
+                .findFirst()
+                .orElse(null);
+    }
 }

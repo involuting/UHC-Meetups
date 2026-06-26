@@ -34,9 +34,9 @@ public class Arena {
     private final EnumSet<ScenarioType> scenarios = EnumSet.noneOf(ScenarioType.class);
 
     private ArenaState state = ArenaState.SETUP;
-
+    @Getter
     private int minPlayers;
-    private int maxPlayers;
+    @Getter int maxPlayers;
 
     private int countdown = 30;
     private int gracePeriod = 0;
@@ -51,6 +51,9 @@ public class Arena {
     private boolean goldenHeads = true;
     private boolean naturalRegeneration = false;
     private boolean deathmatchEnabled = true;
+
+    private boolean enabled;
+    private boolean inUse;
 
 
 
@@ -106,4 +109,11 @@ public class Arena {
     }
 
 
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public boolean isInUse() {
+        return inUse;
+    }
 }

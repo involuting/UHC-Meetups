@@ -36,7 +36,7 @@ public class DeathmatchTask extends BukkitRunnable {
 
         if (seconds <= 0) {
             cancel();
-            gameService.startDeathmatch();
+            gameService.startDeathmatch(game);
             return;
         }
 

@@ -7,6 +7,7 @@ import me.involuting.meetups.game.service.GameService;
 import me.involuting.meetups.game.state.GameState;
 import me.involuting.meetups.player.MeetupPlayer;
 import me.involuting.meetups.player.PlayerManager;
+import me.involuting.meetups.queue.QueueManager;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -17,22 +18,32 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 
-@RequiredArgsConstructor
+
 public class PlayerListener implements Listener {
 
     private final PlayerManager playerManager;
     private final GameManager gameManager;
     private final GameService gameService;
+    private final QueueManager queueManager;
+
+    public PlayerListener(PlayerManager playerManager, GameManager gameManager, GameService gameService, QueueManager queueManager) {
+        this.playerManager = playerManager;
+        this.gameManager = gameManager;
+        this.gameService = gameService;
+        this.queueManager = queueManager;
+    }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
 
         Player player = event.getPlayer();
-        MeetupPlayer meetupPlayer = playerManager.getOrCreate(player);
+
+        MeetupPlayer mp = playerManager.getOrCreate(player);
 
         player.setGameMode(GameMode.ADVENTURE);
 
         if (!gameManager.hasGame()) {
+            queueManager.giveLobbyItems(player);
             return;
         }
 
@@ -42,22 +53,24 @@ public class PlayerListener implements Listener {
 
             case WAITING:
             case STARTING:
-                player.sendMessage("§eA game is waiting for players. Use §6/meetups join§e to participate.");
+
+                player.sendMessage("§eA game is starting soon! Use §6/meetups join §eto play.");
+                queueManager.giveLobbyItems(player);
                 break;
 
             default:
-                meetupPlayer.setAlive(false);
-                meetupPlayer.setSpectating(true);
 
-                game.addSpectator(meetupPlayer);
+                mp.setAlive(false);
+                mp.setSpectating(true);
+
+                game.addSpectator(mp);
 
                 player.setGameMode(GameMode.SPECTATOR);
 
-                if (game.getArena().getSpectatorSpawn() != null) {
-                    player.teleport(game.getArena().getSpectatorSpawn());
-                }
+                Location spawn = game.getArena().getSpectatorSpawn();
+                if (spawn != null) player.teleport(spawn);
 
-                player.sendMessage("§cA game is already in progress. You have joined as a spectator.");
+                player.sendMessage("§cYou joined as a spectator.");
                 break;
         }
     }
@@ -82,44 +95,44 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
 
-        if (!gameManager.hasGame()) {
-            return;
-        }
+        if (!gameManager.hasGame()) return;
 
         Game game = gameManager.getGame();
 
-        if (gameManager.isState(GameState.PLAYING)
-                || gameManager.isState(GameState.DEATHMATCH)
-                || gameManager.isState(GameState.ENDING)) {
+        if (game.getGameState() == GameState.PLAYING
+                || game.getGameState() == GameState.DEATHMATCH) {
+
+            Location spawn = game.getArena().getSpectatorSpawn();
+
+            if (spawn != null) {
+                event.setRespawnLocation(spawn);
+            }
 
             event.getPlayer().setGameMode(GameMode.SPECTATOR);
-
-            Location spectatorSpawn = game.getArena().getSpectatorSpawn();
-
-            if (spectatorSpawn != null) {
-                event.setRespawnLocation(spectatorSpawn);
-            }
         }
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
 
-        playerManager.get(event.getPlayer()).ifPresent(player -> {
+        Player player = event.getPlayer();
+
+        playerManager.get(player).ifPresent(mp -> {
 
             if (gameManager.hasGame()) {
 
                 Game game = gameManager.getGame();
 
-                if (player.isAlive()) {
-                    gameService.eliminate(player);
+                if (mp.isAlive()) {
+                    gameService.eliminate(mp);
                 } else {
-                    game.removePlayer(player);
-                    game.removeSpectator(player);
+                    game.removeSpectator(mp);
+                    game.removePlayer(mp);
                 }
             }
 
-            playerManager.remove(event.getPlayer().getUniqueId());
+            playerManager.remove(player.getUniqueId());
+            queueManager.leave(player); // IMPORTANT FIX
         });
     }
 }

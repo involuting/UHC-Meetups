@@ -37,6 +37,6 @@ public class JoinGameCommand implements SubCommand {
             return;
         }
 
-        gameService.join(player, arena);
+
     }
 }

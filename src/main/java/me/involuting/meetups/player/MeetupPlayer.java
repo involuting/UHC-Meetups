@@ -22,6 +22,8 @@ public class MeetupPlayer {
     private boolean frozen;
     private boolean disconnected;
 
+    private PlayerState state = PlayerState.LOBBY;
+
     private UUID lastAttacker;
     private long lastDamageTime;
 

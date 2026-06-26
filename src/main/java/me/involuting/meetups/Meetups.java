@@ -9,12 +9,15 @@ import me.involuting.meetups.command.admin.MeetupCommand;
 import me.involuting.meetups.command.admin.ScenarioCommand;
 import me.involuting.meetups.command.admin.ToggleCommand;
 import me.involuting.meetups.command.subcommand.*;
+import me.involuting.meetups.game.countdown.GameCountdown;
 import me.involuting.meetups.game.manager.GameManager;
 import me.involuting.meetups.game.service.GameService;
 import me.involuting.meetups.listener.BlockListener;
 import me.involuting.meetups.listener.EntityListener;
+import me.involuting.meetups.listener.InteractListener;
 import me.involuting.meetups.listener.PlayerListener;
 import me.involuting.meetups.player.PlayerManager;
+import me.involuting.meetups.queue.QueueManager;
 import me.involuting.meetups.scatter.ScatterManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -29,17 +32,19 @@ public final class Meetups extends JavaPlugin {
     private ArenaManager arenaManager;
     private ArenaStorage arenaStorage;
     private GameService gameService;
+    private QueueManager queueManager;
+    private GameCountdown gameCountdown;
 
 
     @Override
     public void onEnable() {
+
         registerManagers();
-        registerCommands();
+        registerServices();
         registerListeners();
+        registerCommands();
 
         arenaStorage.load();
-
-
     }
 
     @Override
@@ -62,6 +67,16 @@ public final class Meetups extends JavaPlugin {
         arenaManager = new ArenaManager(arenaStorage);
 
         borderManager = new BorderManager();
+    }
+
+    private void registerListeners(){
+        Bukkit.getPluginManager().registerEvents(new BlockListener(gameManager), this);
+        Bukkit.getPluginManager().registerEvents(new EntityListener(gameManager, playerManager), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerListener(playerManager, gameManager, gameService, queueManager), this);
+        Bukkit.getPluginManager().registerEvents(new InteractListener(queueManager), this);
+    }
+
+    private void registerServices() {
 
         gameService = new GameService(
                 this,
@@ -70,12 +85,14 @@ public final class Meetups extends JavaPlugin {
                 scatterManager,
                 playerManager
         );
-    }
 
-    private void registerListeners(){
-        Bukkit.getPluginManager().registerEvents(new BlockListener(gameManager), this);
-        Bukkit.getPluginManager().registerEvents(new EntityListener(gameManager, playerManager), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerListener(playerManager, gameManager, gameService), this);
+        queueManager = new QueueManager(
+                this,
+                gameService
+        );
+
+
+        gameService.setQueueManager(queueManager);
     }
 
 
