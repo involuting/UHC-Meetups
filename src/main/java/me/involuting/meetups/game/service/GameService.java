@@ -41,9 +41,7 @@ public class GameService {
 
     private boolean starting = false;
 
-    // =========================
-    // START FROM QUEUE
-    // =========================
+
     public void startFromQueue(Arena arena, Set<UUID> queuedPlayers) {
 
         if (gameManager.hasGame() || starting) {
@@ -79,12 +77,11 @@ public class GameService {
         startCountdown(game);
     }
 
-    // =========================
-    // COUNTDOWN
-    // =========================
     private void startCountdown(Game game) {
 
         game.setGameState(GameState.STARTING);
+
+        scatterManager.precompute(game);
 
         countdown = new GameCountdown(
                 plugin,
@@ -101,9 +98,7 @@ public class GameService {
         countdown.start();
     }
 
-    // =========================
-    // SCATTER
-    // =========================
+
     public void scatterPlayers(Game game) {
 
         game.setGameState(GameState.SCATTERING);
@@ -116,11 +111,10 @@ public class GameService {
         };
 
         scatterTask.start();
+
     }
 
-    // =========================
-    // GRACE PERIOD
-    // =========================
+
     public void startGracePeriod(Game game) {
 
         game.setGameState(GameState.GRACE_PERIOD);
@@ -137,9 +131,7 @@ public class GameService {
         gracePeriodTask.start();
     }
 
-    // =========================
-    // PLAYING
-    // =========================
+
     public void startPlaying(Game game) {
 
         game.setGameState(GameState.PLAYING);
@@ -149,9 +141,7 @@ public class GameService {
         startBorder(game);
     }
 
-    // =========================
-    // BORDER
-    // =========================
+
     private void startBorder(Game game) {
 
         borderManager.setup(game);
@@ -166,9 +156,7 @@ public class GameService {
         borderTask.start(game.getArena().getBorderDelay());
     }
 
-    // =========================
-    // DEATHMATCH
-    // =========================
+
     public void startDeathmatch(Game game) {
 
         game.setGameState(GameState.DEATHMATCH);
@@ -200,9 +188,7 @@ public class GameService {
         borderManager.shrinkTo(game, arena.getDeathmatchBorderSize(), 10);
     }
 
-    // =========================
-    // ELIMINATION
-    // =========================
+
     public void eliminate(MeetupPlayer player) {
 
         Game game = safeGame();
@@ -219,9 +205,8 @@ public class GameService {
         checkWinner(game);
     }
 
-    // =========================
-    // WIN CHECK
-    // =========================
+
+
     private void checkWinner(Game game) {
 
         long alive = game.getPlayers().stream()
@@ -247,9 +232,7 @@ public class GameService {
         resetBorder();
     }
 
-    // =========================
-    // END GAME
-    // =========================
+
     public void endGame() {
 
         Game game = safeGame();
@@ -266,9 +249,7 @@ public class GameService {
         starting = false;
     }
 
-    // =========================
-    // RESET PLAYER
-    // =========================
+
     private void resetPlayer(MeetupPlayer mp) {
 
         Player player = mp.getPlayer();
@@ -311,9 +292,7 @@ public class GameService {
         gracePeriodTask = null;
     }
 
-    // =========================
-    // SAFE GAME
-    // =========================
+
     private Game safeGame() {
 
         if (!gameManager.hasGame()) {
@@ -323,9 +302,7 @@ public class GameService {
         return gameManager.getGame();
     }
 
-    // =========================
-    // BORDER RESET
-    // =========================
+
     public void resetBorder() {
 
         WorldBorder border = gameManager.getGame().getArena().getWorld().getWorldBorder();
@@ -335,6 +312,7 @@ public class GameService {
         border.setWarningDistance(0);
         border.setDamageAmount(0);
         border.setDamageBuffer(0);
+        border.reset();
     }
 
     public void setQueueManager(QueueManager queueManager) {
