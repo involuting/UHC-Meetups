@@ -276,9 +276,7 @@ public class GameService {
                 .forEach(e -> player.removePotionEffect(e.getType()));
     }
 
-    // =========================
-    // STOP TASKS
-    // =========================
+
     private void stopTasks() {
 
         if (countdown != null) countdown.cancel();
