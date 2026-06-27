@@ -46,7 +46,7 @@ public final class Meetups extends JavaPlugin {
         registerListeners();
         registerCommands();
 
-        arenaStorage.load();
+        arenaStorage.reload();
 
         scoreboardManager.start();
     }
@@ -55,7 +55,7 @@ public final class Meetups extends JavaPlugin {
     public void onDisable() {
 
         if (gameManager.hasGame()) {
-            gameService.endGame();
+            gameService.endGame(gameManager.getCurrentGame());
         }
 
         arenaManager.save();

@@ -36,27 +36,35 @@ public class ArenaStorage {
         config = YamlConfiguration.loadConfiguration(file);
 
         List<Arena> arenas = new ArrayList<>();
+
         ConfigurationSection root = config.getConfigurationSection("arenas");
 
         if (root == null) {
+            plugin.getLogger().info("No arenas found in arenas.yml.");
             return;
         }
 
         for (String name : root.getKeys(false)) {
+
             ConfigurationSection section = root.getConfigurationSection(name);
-            if (section == null) continue;
+
+            if (section == null) {
+                continue;
+            }
 
             Arena arena = loadArena(name, section);
+
             if (arena != null) {
                 arenas.add(arena);
+                plugin.getLogger().info("Loaded arena '" + arena.getName() + "'");
             }
         }
 
-        // Optional hook into manager
         if (arenaManager != null) {
             arenaManager.loadArenas(arenas);
         }
 
+        plugin.getLogger().info("Loaded " + arenas.size() + " arena(s).");
     }
 
     /**
@@ -64,8 +72,9 @@ public class ArenaStorage {
      */
     public void save(List<Arena> arenas) {
 
-        if (file == null) setupFile();
-        if (config == null) config = new YamlConfiguration();
+        setupFile();
+
+        config = YamlConfiguration.loadConfiguration(file);
 
         config.set("arenas", null);
 
@@ -75,14 +84,13 @@ public class ArenaStorage {
 
         try {
             config.save(file);
+            plugin.getLogger().info("Saved " + arenas.size() + " arena(s).");
         } catch (IOException exception) {
             plugin.getLogger().log(Level.SEVERE, "Failed to save arenas.yml.", exception);
         }
     }
 
-    // ------------------------
-    // Loading
-    // ------------------------
+
 
     private Arena loadArena(String name, ConfigurationSection section) {
 
@@ -129,13 +137,14 @@ public class ArenaStorage {
         return arena;
     }
 
-    // ------------------------
-    // Saving
-    // ------------------------
+
 
     private void saveArena(Arena arena) {
 
-        if (arena.getWorld() == null) return;
+        if (arena.getWorld() == null) {
+            plugin.getLogger().warning("Skipping arena '" + arena.getName() + "' because it has no world.");
+            return;
+        }
 
         String path = "arenas." + arena.getName();
 
@@ -165,20 +174,24 @@ public class ArenaStorage {
         config.set(path + ".scenarios.golden-heads", arena.isGoldenHeads());
         config.set(path + ".scenarios.natural-regeneration", arena.isNaturalRegeneration());
         config.set(path + ".scenarios.deathmatch", arena.isDeathmatchEnabled());
+
+        plugin.getLogger().info("Saved arena '" + arena.getName() + "'");
     }
 
-    // ------------------------
-    // File setup
-    // ------------------------
 
     private void setupFile() {
 
-        if (file != null) return;
+        if (file != null) {
+            return;
+        }
+
+        if (!plugin.getDataFolder().exists()) {
+            plugin.getDataFolder().mkdirs();
+        }
 
         file = new File(plugin.getDataFolder(), "arenas.yml");
 
         if (!file.exists()) {
-            plugin.getDataFolder().mkdirs();
             try {
                 file.createNewFile();
             } catch (IOException exception) {
@@ -187,9 +200,7 @@ public class ArenaStorage {
         }
     }
 
-    // ------------------------
-    // Location helpers
-    // ------------------------
+
 
     private void writeLocation(String path, Location location) {
         if (location == null) return;
@@ -213,5 +224,15 @@ public class ArenaStorage {
                 (float) section.getDouble(path + ".yaw"),
                 (float) section.getDouble(path + ".pitch")
         );
+    }
+
+    public void save() {
+        if (arenaManager != null) {
+            save((List<Arena>) arenaManager.getArenas());
+        }
+    }
+
+    public void reload() {
+        load();
     }
 }

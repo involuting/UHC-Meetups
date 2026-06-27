@@ -81,8 +81,6 @@ public class GameService {
 
         game.setGameState(GameState.STARTING);
 
-        scatterManager.precompute(game);
-
         countdown = new GameCountdown(
                 plugin,
                 game,
@@ -191,9 +189,15 @@ public class GameService {
 
     public void eliminate(MeetupPlayer player) {
 
-        Game game = safeGame();
+        Game game = gameManager.getCurrentGame();
 
-        if (!player.isAlive()) return; // prevents double elimination
+        if (game == null) {
+            return;
+        }
+
+        if (!player.isAlive()) {
+            return;
+        }
 
         player.addDeath();
         player.setAlive(false);
@@ -202,6 +206,16 @@ public class GameService {
         game.removePlayer(player);
         game.addSpectator(player);
 
+        Player bukkit = player.getPlayer();
+
+        if (bukkit != null) {
+            bukkit.setGameMode(GameMode.SPECTATOR);
+
+            if (game.getArena().getSpectatorSpawn() != null) {
+                bukkit.teleport(game.getArena().getSpectatorSpawn());
+            }
+        }
+
         checkWinner(game);
     }
 
@@ -209,42 +223,49 @@ public class GameService {
 
     private void checkWinner(Game game) {
 
-        long alive = game.getPlayers().stream()
-                .filter(MeetupPlayer::isAlive)
-                .count();
-
-        if (alive > 1) return;
-
         MeetupPlayer winner = game.getPlayers().stream()
                 .filter(MeetupPlayer::isAlive)
                 .findFirst()
                 .orElse(null);
 
-        if (winner != null && winner.getPlayer() != null) {
-            Bukkit.broadcastMessage(ChatColor.GOLD +
-                    winner.getPlayer().getName() +
-                    " has won the game!");
-        } else {
-            Bukkit.broadcastMessage(ChatColor.RED + "No winner.");
+        if (game.getAlivePlayers() > 1) {
+            return;
         }
 
-        endGame();
-        resetBorder();
+        if (winner != null && winner.getPlayer() != null) {
+            Bukkit.broadcastMessage("§6§lWinner §8» §e" + winner.getPlayer().getName());
+        } else {
+            Bukkit.broadcastMessage("§cNobody won the match.");
+        }
+
+        endGame(game);
     }
 
 
-    public void endGame() {
-
-        Game game = safeGame();
+    public void endGame(Game game) {
 
         game.setGameState(GameState.ENDING);
 
         stopTasks();
 
-        game.getPlayers().forEach(this::resetPlayer);
-        game.getSpectators().forEach(this::resetPlayer);
+        borderManager.reset(game);
+        borderManager.clear(game);
+
+        for (MeetupPlayer mp : game.getPlayers()) {
+            resetPlayer(mp);
+        }
+
+        for (MeetupPlayer mp : game.getSpectators()) {
+            resetPlayer(mp);
+        }
+
+        game.reset();
 
         gameManager.destroy();
+
+        if (queueManager != null) {
+            queueManager.clearQueue();
+        }
 
         starting = false;
     }

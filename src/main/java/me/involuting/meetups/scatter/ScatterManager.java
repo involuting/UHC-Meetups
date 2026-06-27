@@ -12,105 +12,72 @@ import java.util.*;
 public class ScatterManager {
 
     private static final int MAX_ATTEMPTS = 60;
-    private static final double MIN_DISTANCE_SQUARED = 2500D;
+    private static final int MIN_DISTANCE = 100;
 
     private final Random random = new Random();
 
-    private final Map<UUID, Location> scatterLocations = new HashMap<>();
-    private final List<int[]> usedPositions = new ArrayList<>();
+    private final List<Location> usedLocations = new ArrayList<>();
 
-    public void precompute(Game game) {
+    public void reset() {
+        usedLocations.clear();
+    }
 
-        scatterLocations.clear();
-        usedPositions.clear();
+    public Location findScatterLocation(Game game) {
 
         World world = game.getArena().getWorld();
         Location center = game.getArena().getBorderCenter();
-        int radius = (int) (game.getArena().getStartingBorderSize() / 2);
+        int radius = (int) game.getArena().getStartingBorderSize() / 2;
 
-        List<MeetupPlayer> players = new ArrayList<>(game.getPlayers());
+        for (int attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
 
-        for (MeetupPlayer player : players) {
+            double angle = random.nextDouble() * Math.PI * 2;
+            double distance = Math.sqrt(random.nextDouble()) * radius;
 
-            int[] pos = findSafePosition(world, center, radius);
+            int x = center.getBlockX() + (int) (Math.cos(angle) * distance);
+            int z = center.getBlockZ() + (int) (Math.sin(angle) * distance);
 
-            if (pos == null) continue;
-
-            Location loc = toLocation(world, pos);
-
-            scatterLocations.put(player.getUniqueID(), loc);
-            usedPositions.add(pos);
-        }
-    }
-
-    public void scatter(Game game) {
-
-        for (MeetupPlayer meetupPlayer : game.getPlayers()) {
-
-            Player player = meetupPlayer.getPlayer();
-            if (player == null || !player.isOnline()) continue;
-
-            Location loc = scatterLocations.get(meetupPlayer.getUniqueID());
-
-            if (loc == null) {
-                player.sendMessage("§cNo scatter location was generated.");
-                continue;
-            }
-
-            player.teleport(loc);
-        }
-
-        scatterLocations.clear();
-        usedPositions.clear();
-    }
-
-    private int[] findSafePosition(World world, Location center, int radius) {
-
-        for (int i = 0; i < MAX_ATTEMPTS; i++) {
-
-            int x = center.getBlockX() + random.nextInt(radius * 2) - radius;
-            int z = center.getBlockZ() + random.nextInt(radius * 2) - radius;
-
-            // chunk-heavy call reduced to only successful candidates
             int y = world.getHighestBlockYAt(x, z);
 
-            if (!isSafe(world, x, y, z)) continue;
+            Location location = new Location(world, x + 0.5, y + 1, z + 0.5);
 
-            if (isTooClose(x, z)) continue;
+            if (!isSafe(location))
+                continue;
 
-            return new int[]{x, z, y};
+            if (tooClose(location))
+                continue;
+
+            usedLocations.add(location);
+
+            return location;
         }
 
-        return null;
+        return center.clone().add(0.5, 100, 0.5);
     }
 
-    private boolean isSafe(World world, int x, int y, int z) {
+    private boolean tooClose(Location location) {
 
-        Material ground = world.getBlockAt(x, y - 1, z).getType();
+        for (Location other : usedLocations) {
 
-        return ground.isSolid()
-                && ground != Material.LAVA
-                && ground != Material.WATER
-                && ground != Material.CACTUS
-                && ground != Material.MAGMA_BLOCK;
-    }
-
-    private boolean isTooClose(int x, int z) {
-
-        for (int[] pos : usedPositions) {
-
-            int dx = pos[0] - x;
-            int dz = pos[1] - z;
-
-            if (dx * dx + dz * dz < MIN_DISTANCE_SQUARED) {
+            if (other.distanceSquared(location) < MIN_DISTANCE * MIN_DISTANCE) {
                 return true;
             }
+
         }
 
         return false;
     }
 
-    private Location toLocation(World world, int[] pos) {
-        return new Location(world, pos[0] + 0.5, pos[2] + 1, pos[1] + 0.5);
+    private boolean isSafe(Location location) {
+
+        Material ground = location.clone()
+                .subtract(0, 1, 0)
+                .getBlock()
+                .getType();
+
+        return ground.isSolid()
+                && ground != Material.WATER
+                && ground != Material.LAVA
+                && ground != Material.CACTUS
+                && ground != Material.MAGMA_BLOCK;
     }
 }
