@@ -24,6 +24,8 @@ public class Game {
 
     private int countdown;
 
+    private long startTime;
+
     public Game(Arena arena) {
         this.arena = arena;
     }
@@ -117,6 +119,14 @@ public class Game {
         spectators.clear();
         countdown = 0;
         gameState = GameState.WAITING;
+    }
+
+    public long getCurrentTimeSeconds() {
+        if (startTime == 0) {
+            return 0;
+        }
+
+        return (System.currentTimeMillis() - startTime) / 1000;
     }
 
     public Set<MeetupPlayer> getPlayers() {

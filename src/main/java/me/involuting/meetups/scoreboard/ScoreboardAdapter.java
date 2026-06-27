@@ -89,6 +89,7 @@ public class ScoreboardAdapter {
                 lines.add("§fAlive: §a" + game.getAlivePlayers());
                 lines.add("§fKills: §c" + meetupPlayer.getKills());
                 lines.add("§fBorder: §e" + plugin.getBorderManager().getCurrentSize(game));
+                lines.add("§fTime: §e" + game.getCurrentTimeSeconds());
                 lines.add("§fCombat: " + (meetupPlayer.isCombatTagged() ? "§cYes" : "§aNo"));
                 lines.add("");
                 lines.add(FOOTER);

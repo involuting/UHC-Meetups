@@ -52,27 +52,34 @@ public class GameService {
             throw new IllegalStateException("Arena cannot be null.");
         }
 
-        if (queuedPlayers.size() < arena.getMinPlayers()) {
-            throw new IllegalStateException("Not enough players.");
+        Set<Player> onlinePlayers = new HashSet<>();
+
+        for (UUID uuid : queuedPlayers) {
+            Player player = Bukkit.getPlayer(uuid);
+
+            if (player != null && player.isOnline()) {
+                onlinePlayers.add(player);
+            }
+        }
+
+        if (onlinePlayers.size() < arena.getMinPlayers()) {
+            throw new IllegalStateException("Not enough online players.");
         }
 
         starting = true;
 
         Game game = gameManager.create(arena);
 
-        for (UUID uuid : new HashSet<>(queuedPlayers)) {
+        for (Player player : onlinePlayers) {
 
-            Player player = Bukkit.getPlayer(uuid);
-            if (player == null || !player.isOnline()) continue;
+            MeetupPlayer meetupPlayer = playerManager.getOrCreate(player);
+            meetupPlayer.setAlive(true);
+            meetupPlayer.setSpectating(false);
 
-            MeetupPlayer mp = playerManager.getOrCreate(player);
-            mp.setAlive(true);
-            mp.setSpectating(false);
+            game.addPlayer(meetupPlayer);
 
-            game.addPlayer(mp);
+            queuedPlayers.remove(player.getUniqueId());
         }
-
-        queuedPlayers.clear();
 
         startCountdown(game);
     }
@@ -117,7 +124,10 @@ public class GameService {
 
         game.setGameState(GameState.GRACE_PERIOD);
 
-        Bukkit.broadcastMessage(ChatColor.GREEN + "Grace period has started.");
+        Bukkit.broadcastMessage(ChatColor.GREEN + "Grace period has started");
+
+        playSound(game, Sound.ENTITY_ENDER_DRAGON_FLAP, 1.0f, 1.0f);
+
 
         gracePeriodTask = new GracePeriodTask(plugin, game, this, game.getArena().getGracePeriod()) {
             @Override
@@ -134,7 +144,11 @@ public class GameService {
 
         game.setGameState(GameState.PLAYING);
 
+        game.setStartTime(System.currentTimeMillis());
+
         Bukkit.broadcastMessage(ChatColor.GREEN + "The game has started");
+
+        playSound(game, Sound.BLOCK_BELL_USE, 1.0F, 1.0F);
 
         startBorder(game);
     }
@@ -312,29 +326,25 @@ public class GameService {
     }
 
 
-    private Game safeGame() {
 
-        if (!gameManager.hasGame()) {
-            throw new IllegalStateException("No active game.");
-        }
-
-        return gameManager.getGame();
-    }
-
-
-    public void resetBorder() {
-
-        WorldBorder border = gameManager.getGame().getArena().getWorld().getWorldBorder();
-
-        border.setSize(6000);
-        border.setCenter(gameManager.getGame().getArena().getBorderCenter());
-        border.setWarningDistance(0);
-        border.setDamageAmount(0);
-        border.setDamageBuffer(0);
-        border.reset();
-    }
 
     public void setQueueManager(QueueManager queueManager) {
         this.queueManager = queueManager;
+    }
+
+    private void playSound(Game game, Sound sound, float volume, float pitch) {
+        for (MeetupPlayer mp : game.getPlayers()) {
+            Player player = mp.getPlayer();
+            if (player != null && player.isOnline()) {
+                player.playSound(player.getLocation(), sound, volume, pitch);
+            }
+        }
+
+        for (MeetupPlayer mp : game.getSpectators()) {
+            Player player = mp.getPlayer();
+            if (player != null && player.isOnline()) {
+                player.playSound(player.getLocation(), sound, volume, pitch);
+            }
+        }
     }
 }

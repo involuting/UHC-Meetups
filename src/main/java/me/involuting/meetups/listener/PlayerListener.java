@@ -162,7 +162,7 @@ public class PlayerListener implements Listener {
             }
         }
 
-        if (queueManager.isQueued(player)) {
+        if (queueManager.isQueued(player.getUniqueId())) {
             queueManager.leave(player);
         }
 

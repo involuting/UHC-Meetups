@@ -2,7 +2,6 @@ package me.involuting.meetups.queue;
 
 import me.involuting.meetups.Meetups;
 import me.involuting.meetups.arena.Arena;
-import me.involuting.meetups.game.countdown.GameCountdown;
 import me.involuting.meetups.game.service.GameService;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -156,7 +155,7 @@ public class QueueManager {
         return Math.max(0, minimumPlayers - queue.size());
     }
 
-    public boolean isQueued(Player player) {
-        return player != null && queue.contains(player.getUniqueId());
+    public boolean isQueued(UUID player) {
+        return player != null && queue.contains(player);
     }
 }
