@@ -1,6 +1,7 @@
 package me.involuting.meetups.listener;
 
 import lombok.RequiredArgsConstructor;
+import me.involuting.meetups.Meetups;
 import me.involuting.meetups.game.Game;
 import me.involuting.meetups.game.manager.GameManager;
 import me.involuting.meetups.game.service.GameService;
@@ -9,6 +10,7 @@ import me.involuting.meetups.player.MeetupPlayer;
 import me.involuting.meetups.player.PlayerManager;
 import me.involuting.meetups.queue.QueueManager;
 import me.involuting.meetups.scoreboard.ScoreboardManager;
+import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -27,13 +29,15 @@ public class PlayerListener implements Listener {
     private final GameService gameService;
     private final QueueManager queueManager;
     private final ScoreboardManager scoreboardManager;
+    private final Meetups plugin;
 
-    public PlayerListener(PlayerManager playerManager, GameManager gameManager, GameService gameService, QueueManager queueManager, ScoreboardManager scoreboardManager) {
+    public PlayerListener(PlayerManager playerManager, GameManager gameManager, GameService gameService, QueueManager queueManager, ScoreboardManager scoreboardManager, Meetups plugin) {
         this.playerManager = playerManager;
         this.gameManager = gameManager;
         this.gameService = gameService;
         this.queueManager = queueManager;
         this.scoreboardManager = scoreboardManager;
+        this.plugin = plugin;
     }
 
     @EventHandler
@@ -86,6 +90,38 @@ public class PlayerListener implements Listener {
                 break;
         }
     }
+    @EventHandler
+    public void onRespawn(PlayerRespawnEvent event) {
+
+        if (!gameManager.hasGame()) {
+            return;
+        }
+
+        MeetupPlayer mp = playerManager.get(event.getPlayer());
+
+        if (mp == null || !mp.isSpectating()) {
+            return;
+        }
+
+        Game game = gameManager.getCurrentGame();
+
+        Location spawn = game.getArena().getSpectatorSpawn();
+
+        if (spawn != null) {
+            event.setRespawnLocation(spawn);
+        }
+
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            Player player = event.getPlayer();
+
+            player.setGameMode(GameMode.SPECTATOR);
+
+            if (spawn != null) {
+                player.teleport(spawn);
+            }
+        });
+    }
+
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
@@ -99,7 +135,7 @@ public class PlayerListener implements Listener {
         MeetupPlayer victim = playerManager.get(event.getEntity());
 
         if (victim != null) {
-            gameService.eliminate(victim);
+            Bukkit.getScheduler().runTask(plugin, () -> gameService.eliminate(victim));
         }
 
         Player killer = event.getEntity().getKiller();
@@ -113,26 +149,6 @@ public class PlayerListener implements Listener {
         }
 
         scoreboardManager.updateAll();
-    }
-
-    @EventHandler
-    public void onRespawn(PlayerRespawnEvent event) {
-
-        if (!gameManager.hasGame()) return;
-
-        Game game = gameManager.getCurrentGame();
-
-        if (game.getGameState() == GameState.PLAYING
-                || game.getGameState() == GameState.DEATHMATCH) {
-
-            Location spawn = game.getArena().getSpectatorSpawn();
-
-            if (spawn != null) {
-                event.setRespawnLocation(spawn);
-            }
-
-            event.getPlayer().setGameMode(GameMode.SPECTATOR);
-        }
     }
 
     @EventHandler

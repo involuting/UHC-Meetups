@@ -77,7 +77,7 @@ public final class Meetups extends JavaPlugin {
     private void registerListeners(){
         Bukkit.getPluginManager().registerEvents(new BlockListener(gameManager), this);
         Bukkit.getPluginManager().registerEvents(new EntityListener(gameManager, playerManager), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerListener(playerManager, gameManager, gameService, queueManager, scoreboardManager), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerListener(playerManager, gameManager, gameService, queueManager, scoreboardManager, this), this);
         Bukkit.getPluginManager().registerEvents(new InteractListener(queueManager), this);
     }
 

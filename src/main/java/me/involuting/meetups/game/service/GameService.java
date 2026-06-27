@@ -205,11 +205,7 @@ public class GameService {
 
         Game game = gameManager.getCurrentGame();
 
-        if (game == null) {
-            return;
-        }
-
-        if (!player.isAlive()) {
+        if (game == null || !player.isAlive()) {
             return;
         }
 
@@ -219,16 +215,6 @@ public class GameService {
 
         game.removePlayer(player);
         game.addSpectator(player);
-
-        Player bukkit = player.getPlayer();
-
-        if (bukkit != null) {
-            bukkit.setGameMode(GameMode.SPECTATOR);
-
-            if (game.getArena().getSpectatorSpawn() != null) {
-                bukkit.teleport(game.getArena().getSpectatorSpawn());
-            }
-        }
 
         checkWinner(game);
     }
