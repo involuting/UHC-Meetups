@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import me.involuting.meetups.game.Game;
 import me.involuting.meetups.game.manager.GameManager;
 import me.involuting.meetups.game.state.GameState;
+import me.involuting.meetups.player.MeetupPlayer;
 import me.involuting.meetups.player.PlayerManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -58,8 +59,11 @@ public class EntityListener implements Listener {
             return;
         }
 
-        playerManager.get(victim).ifPresent(player ->
-                player.setLastAttacker(attacker));
+        MeetupPlayer meetupPlayer = playerManager.get(victim);
+
+        if (meetupPlayer != null) {
+            meetupPlayer.setLastAttacker(attacker);
+        }
     }
 
     @EventHandler

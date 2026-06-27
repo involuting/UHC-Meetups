@@ -141,4 +141,22 @@ public class QueueManager {
 
         return item;
     }
+
+    public boolean isEmpty() {
+        return queue.isEmpty();
+    }
+
+    public int getQueueSize() {
+        return queue.size();
+    }
+
+
+
+    public int getPlayersNeeded(int minimumPlayers) {
+        return Math.max(0, minimumPlayers - queue.size());
+    }
+
+    public boolean isQueued(Player player) {
+        return player != null && queue.contains(player.getUniqueId());
+    }
 }

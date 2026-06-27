@@ -115,4 +115,8 @@ public class GameManager {
             throw new IllegalStateException("No active game.");
         }
     }
+
+    public Game getCurrentGame() {
+        return game;
+    }
 }

@@ -39,7 +39,7 @@ public abstract class GracePeriodTask extends BukkitRunnable {
         if (seconds <= 0) {
 
             Bukkit.broadcastMessage(
-                    ChatColor.RED + "Grace period has ended. PvP is now enabled!"
+                    ChatColor.RED + "Grace period has ended and PvP is now enabled"
             );
 
             cancel();
@@ -57,9 +57,9 @@ public abstract class GracePeriodTask extends BukkitRunnable {
                 || seconds <= 5) {
 
             Bukkit.broadcastMessage(
-                    ChatColor.YELLOW + "Grace period ends in "
-                            + ChatColor.RED + seconds
-                            + ChatColor.YELLOW + " seconds."
+                    ChatColor.GREEN + "Grace period ends in "
+                            + ChatColor.GRAY + seconds
+                            + ChatColor.GREEN + " seconds."
             );
         }
 

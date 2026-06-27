@@ -8,6 +8,7 @@ import me.involuting.meetups.game.state.GameState;
 import me.involuting.meetups.player.MeetupPlayer;
 import me.involuting.meetups.player.PlayerManager;
 import me.involuting.meetups.queue.QueueManager;
+import me.involuting.meetups.scoreboard.ScoreboardManager;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
@@ -25,12 +26,14 @@ public class PlayerListener implements Listener {
     private final GameManager gameManager;
     private final GameService gameService;
     private final QueueManager queueManager;
+    private final ScoreboardManager scoreboardManager;
 
-    public PlayerListener(PlayerManager playerManager, GameManager gameManager, GameService gameService, QueueManager queueManager) {
+    public PlayerListener(PlayerManager playerManager, GameManager gameManager, GameService gameService, QueueManager queueManager, ScoreboardManager scoreboardManager) {
         this.playerManager = playerManager;
         this.gameManager = gameManager;
         this.gameService = gameService;
         this.queueManager = queueManager;
+        this.scoreboardManager = scoreboardManager;
     }
 
     @EventHandler
@@ -41,6 +44,11 @@ public class PlayerListener implements Listener {
         MeetupPlayer mp = playerManager.getOrCreate(player);
 
         player.setGameMode(GameMode.ADVENTURE);
+
+        event.setJoinMessage(null);
+
+
+        scoreboardManager.create(player);
 
         if (!gameManager.hasGame()) {
             queueManager.giveLobbyItems(player);
@@ -53,13 +61,13 @@ public class PlayerListener implements Listener {
 
             case WAITING:
             case STARTING:
-
-                player.sendMessage("§eA game is starting soon! Use §6/meetups join §eto play.");
                 queueManager.giveLobbyItems(player);
+                player.sendMessage("§eA game is starting soon! Use §6/meetups join §eto play.");
                 break;
 
-
             default:
+
+                player.getInventory().clear();
 
                 mp.setAlive(false);
                 mp.setSpectating(true);
@@ -69,14 +77,13 @@ public class PlayerListener implements Listener {
                 player.setGameMode(GameMode.SPECTATOR);
 
                 Location spawn = game.getArena().getSpectatorSpawn();
-                if (spawn != null) player.teleport(spawn);
+
+                if (spawn != null) {
+                    player.teleport(spawn);
+                }
 
                 player.sendMessage("§cYou joined as a spectator.");
                 break;
-        }
-
-        if (gameManager.isRunning()){
-            player.getInventory().clear();
         }
     }
 
@@ -89,12 +96,23 @@ public class PlayerListener implements Listener {
 
         event.setDeathMessage(null);
 
-        playerManager.get(event.getEntity()).ifPresent(gameService::eliminate);
+        MeetupPlayer victim = playerManager.get(event.getEntity());
 
-        if (event.getEntity().getKiller() != null) {
-            playerManager.get(event.getEntity().getKiller())
-                    .ifPresent(MeetupPlayer::addKill);
+        if (victim != null) {
+            gameService.eliminate(victim);
         }
+
+        Player killer = event.getEntity().getKiller();
+
+        if (killer != null) {
+            MeetupPlayer killerPlayer = playerManager.get(killer);
+
+            if (killerPlayer != null) {
+                killerPlayer.addKill();
+            }
+        }
+
+        scoreboardManager.updateAll();
     }
 
     @EventHandler
@@ -102,7 +120,7 @@ public class PlayerListener implements Listener {
 
         if (!gameManager.hasGame()) return;
 
-        Game game = gameManager.getGame();
+        Game game = gameManager.getCurrentGame();
 
         if (game.getGameState() == GameState.PLAYING
                 || game.getGameState() == GameState.DEATHMATCH) {
@@ -122,22 +140,32 @@ public class PlayerListener implements Listener {
 
         Player player = event.getPlayer();
 
-        playerManager.get(player).ifPresent(mp -> {
+        scoreboardManager.remove(player);
 
-            if (gameManager.hasGame()) {
+        event.setQuitMessage(null);
 
-                Game game = gameManager.getGame();
+        MeetupPlayer mp = playerManager.get(player);
 
-                if (mp.isAlive()) {
-                    gameService.eliminate(mp);
-                } else {
-                    game.removeSpectator(mp);
-                    game.removePlayer(mp);
-                }
+        if (mp == null) {
+            return;
+        }
+
+        if (gameManager.hasGame()) {
+
+            Game game = gameManager.getCurrentGame();
+
+            if (mp.isAlive()) {
+                gameService.eliminate(mp);
+            } else {
+                game.removePlayer(mp);
+                game.removeSpectator(mp);
             }
+        }
 
-            playerManager.remove(player.getUniqueId());
-            queueManager.leave(player); // IMPORTANT FIX
-        });
+        if (queueManager.isQueued(player)) {
+            queueManager.leave(player);
+        }
+
+        playerManager.remove(player.getUniqueId());
     }
 }

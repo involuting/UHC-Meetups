@@ -18,12 +18,12 @@ public class PlayerManager {
         players.remove(uuid);
     }
 
-    public Optional<MeetupPlayer> get(Player player){
+    public MeetupPlayer get(Player player){
         return get(player.getUniqueId());
     }
 
-    public Optional<MeetupPlayer> get(UUID uuid){
-        return Optional.ofNullable(players.get(uuid));
+    public MeetupPlayer get(UUID uuid){
+        return players.get(uuid);
     }
 
     public boolean has(Player player){

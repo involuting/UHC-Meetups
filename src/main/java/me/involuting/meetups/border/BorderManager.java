@@ -12,6 +12,7 @@ public class BorderManager {
 
     // cache per game to avoid repeated lookups
     private final Map<UUID, WorldBorder> borders = new HashMap<>();
+    private double currentSize;
 
     private WorldBorder border(Game game) {
         return borders.computeIfAbsent(
@@ -87,4 +88,7 @@ public class BorderManager {
     }
 
 
+    public double getCurrentSize(Game game) {
+        return border(game).getSize();
+    }
 }

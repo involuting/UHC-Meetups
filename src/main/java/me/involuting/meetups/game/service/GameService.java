@@ -136,7 +136,7 @@ public class GameService {
 
         game.setGameState(GameState.PLAYING);
 
-        Bukkit.broadcastMessage(ChatColor.GREEN + "The game has started!");
+        Bukkit.broadcastMessage(ChatColor.GREEN + "The game has started");
 
         startBorder(game);
     }

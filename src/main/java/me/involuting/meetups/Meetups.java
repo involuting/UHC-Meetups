@@ -19,6 +19,7 @@ import me.involuting.meetups.listener.PlayerListener;
 import me.involuting.meetups.player.PlayerManager;
 import me.involuting.meetups.queue.QueueManager;
 import me.involuting.meetups.scatter.ScatterManager;
+import me.involuting.meetups.scoreboard.ScoreboardManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 @Getter @Setter
@@ -34,6 +35,7 @@ public final class Meetups extends JavaPlugin {
     private GameService gameService;
     private QueueManager queueManager;
     private GameCountdown gameCountdown;
+    private ScoreboardManager scoreboardManager;
 
 
     @Override
@@ -45,6 +47,8 @@ public final class Meetups extends JavaPlugin {
         registerCommands();
 
         arenaStorage.load();
+
+        scoreboardManager.start();
     }
 
     @Override
@@ -67,12 +71,13 @@ public final class Meetups extends JavaPlugin {
         arenaManager = new ArenaManager(arenaStorage);
 
         borderManager = new BorderManager();
+        scoreboardManager = new ScoreboardManager(this);
     }
 
     private void registerListeners(){
         Bukkit.getPluginManager().registerEvents(new BlockListener(gameManager), this);
         Bukkit.getPluginManager().registerEvents(new EntityListener(gameManager, playerManager), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerListener(playerManager, gameManager, gameService, queueManager), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerListener(playerManager, gameManager, gameService, queueManager, scoreboardManager), this);
         Bukkit.getPluginManager().registerEvents(new InteractListener(queueManager), this);
     }
 

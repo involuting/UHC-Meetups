@@ -24,12 +24,20 @@ public class BlockListener implements Listener {
         if (!canModifyWorld()) {
             event.setCancelled(true);
         }
+
+        if (canModifyWorld()){
+            event.setCancelled(false);
+        }
     }
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
         if (!canModifyWorld()) {
             event.setCancelled(true);
+        }
+
+        if (canModifyWorld()){
+            event.setCancelled(false);
         }
     }
 

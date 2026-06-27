@@ -87,4 +87,20 @@ public class MeetupPlayer {
         lastAttacker = null;
         lastDamageTime = 0L;
     }
+
+    public boolean isPlaying() {
+        return state == PlayerState.PLAYING;
+    }
+
+    public boolean isLobby() {
+        return state == PlayerState.LOBBY;
+    }
+
+    public boolean isQueued() {
+        return state == PlayerState.QUEUE;
+    }
+
+    public boolean isSpectator() {
+        return spectating;
+    }
 }

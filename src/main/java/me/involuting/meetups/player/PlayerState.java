@@ -3,5 +3,5 @@ package me.involuting.meetups.player;
 public enum PlayerState {
     LOBBY,
     ALIVE,
-    SPECTATOR
+    PLAYING, QUEUE, SPECTATOR
 }
