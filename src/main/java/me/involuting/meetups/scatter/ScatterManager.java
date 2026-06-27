@@ -36,15 +36,20 @@ public class ScatterManager {
             int x = center.getBlockX() + (int) (Math.cos(angle) * distance);
             int z = center.getBlockZ() + (int) (Math.sin(angle) * distance);
 
+            if (isTooClose(x, z)){
+                continue;
+            }
+
             int y = world.getHighestBlockYAt(x, z);
 
             Location location = new Location(world, x + 0.5, y + 1, z + 0.5);
 
+            if (tooClose(location))
+                continue;
+
             if (!isSafe(location))
                 continue;
 
-            if (tooClose(location))
-                continue;
 
             usedLocations.add(location);
 
@@ -63,6 +68,21 @@ public class ScatterManager {
             }
 
         }
+
+        return false;
+    }
+
+    public boolean isTooClose(int x, int z){
+        for (Location other : usedLocations){
+            double dx = other.getX()  - x;
+            double dz = other.getZ() - z;
+            double distance = Math.sqrt(dx * dx + dz * dz);
+
+            if (distance < MIN_DISTANCE * MIN_DISTANCE){
+                return true;
+            }
+        }
+
 
         return false;
     }
