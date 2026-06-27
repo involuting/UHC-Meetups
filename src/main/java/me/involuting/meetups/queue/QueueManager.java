@@ -109,20 +109,32 @@ public class QueueManager {
 
         player.getInventory().setItem(0, createItem(
                 Material.NETHER_STAR,
-                "§aJoin Queue",
-                "§7Click to join a match"
+                "§aJPlay",
+                "§7Right-click to play an match"
         ));
 
         player.getInventory().setItem(4, createItem(
                 Material.COMPASS,
                 "§eArena Selector",
-                "§7Choose a map"
+                "§7Choose an map"
         ));
 
         player.getInventory().setItem(8, createItem(
-                Material.BARRIER,
+                Material.RED_WOOL,
                 "§cLeave Queue",
                 "§7Click to leave queue"
+        ));
+
+        player.getInventory().setItem(10, createItem(
+                Material.BOOK,
+                "&aSettings",
+                "&7Change settings to your needs"
+        ));
+
+        player.getInventory().setItem(2, createItem(
+                Material.ITEM_FRAME,
+                "&aShop",
+                "&fBuy cosmetics for the game and winning the game"
         ));
 
         player.updateInventory();

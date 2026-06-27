@@ -93,6 +93,7 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
 
+
         if (!gameManager.hasGame()) {
             return;
         }
@@ -116,15 +117,22 @@ public class PlayerListener implements Listener {
 
             player.setGameMode(GameMode.SPECTATOR);
 
+
             if (spawn != null) {
                 player.teleport(spawn);
+
             }
+
+            plugin.getQueueManager().giveLobbyItems(player);
         });
+
+
     }
 
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
+        Player player = event.getEntity();
 
         if (!gameManager.hasGame()) {
             return;
@@ -149,6 +157,7 @@ public class PlayerListener implements Listener {
         }
 
         scoreboardManager.updateAll();
+        plugin.getQueueManager().giveLobbyItems(player);
     }
 
     @EventHandler

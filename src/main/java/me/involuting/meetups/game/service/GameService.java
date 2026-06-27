@@ -293,6 +293,8 @@ public class GameService {
 
         player.setGameMode(GameMode.ADVENTURE);
 
+
+
         player.getActivePotionEffects()
                 .forEach(e -> player.removePotionEffect(e.getType()));
     }
